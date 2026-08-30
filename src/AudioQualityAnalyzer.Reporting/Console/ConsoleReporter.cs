@@ -99,6 +99,22 @@ public static class ConsoleReporter
         writer.WriteLine($"Longest Clip:          {result.ClippingAnalysis.LongestClipDuration.TotalMilliseconds.ToString("F1", culture)} ms{(result.ClippingAnalysis.IsSevere ? " (SEVERE)" : "")}");
         writer.WriteLine();
 
+        writer.WriteLine("-- Transcoding --");
+        writer.WriteLine($"Probability:           {result.TranscodingAnalysis.Probability.ToString("F0", culture)}% ({DescribeLabel(result.TranscodingAnalysis.Label)})");
+        writer.WriteLine($"Confidence:            {result.TranscodingAnalysis.Confidence}");
+        foreach (var finding in result.TranscodingAnalysis.Findings)
+        {
+            writer.WriteLine($"  [{finding.Severity}] {finding.Title}");
+            if (verbose)
+            {
+                foreach (var evidence in finding.Evidence)
+                {
+                    writer.WriteLine($"    - {evidence}");
+                }
+            }
+        }
+        writer.WriteLine();
+
         if (result.StereoAnalysis is { } stereo)
         {
             writer.WriteLine("-- Stereo --");
@@ -140,6 +156,16 @@ public static class ConsoleReporter
 
     private static string DescribeMpeg(Core.Enums.MpegVersion version, Core.Enums.MpegLayer layer) =>
         $"MPEG {version switch { Core.Enums.MpegVersion.Version1 => "1", Core.Enums.MpegVersion.Version2 => "2", Core.Enums.MpegVersion.Version2_5 => "2.5", _ => "?" }} Layer {layer switch { Core.Enums.MpegLayer.LayerI => "I", Core.Enums.MpegLayer.LayerII => "II", Core.Enums.MpegLayer.LayerIII => "III", _ => "?" }}";
+
+    private static string DescribeLabel(Core.Enums.TranscodingProbabilityLabel label) => label switch
+    {
+        Core.Enums.TranscodingProbabilityLabel.VeryUnlikely => "Very unlikely",
+        Core.Enums.TranscodingProbabilityLabel.Unlikely => "Unlikely",
+        Core.Enums.TranscodingProbabilityLabel.Uncertain => "Uncertain",
+        Core.Enums.TranscodingProbabilityLabel.Likely => "Likely",
+        Core.Enums.TranscodingProbabilityLabel.HighlyLikely => "Highly likely",
+        _ => label.ToString(),
+    };
 
     private static string FormatLufs(double lufs, CultureInfo culture) =>
         double.IsNegativeInfinity(lufs) ? "-inf LUFS (silent)" : $"{lufs.ToString("F1", culture)} LUFS";

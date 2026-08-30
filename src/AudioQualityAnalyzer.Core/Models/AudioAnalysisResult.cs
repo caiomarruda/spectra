@@ -18,4 +18,6 @@ public sealed record AudioAnalysisResult
 
     /// <summary>Null for mono files — there is no stereo image to describe.</summary>
     public StereoAnalysis? StereoAnalysis { get; init; }
+
+    public required TranscodingAnalysis TranscodingAnalysis { get; init; }
 }
