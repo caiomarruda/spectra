@@ -1,0 +1,12 @@
+## .NET
+bin/
+obj/
+*.user
+
+## OS
+.DS_Store
+
+## IDE
+.vs/
+.vscode/
+*.suo

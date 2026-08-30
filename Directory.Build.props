@@ -1,0 +1,25 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
+
+    <!-- CA1707: underscores are the clearest way to name MPEG 2.5. CA1848/CA1873: LoggerMessage
+         source-gen delegates are overkill for a handful of CLI log lines. CA1859: IAudioDecoder
+         is an intentional abstraction (see 02-AUDIO-ANALYSIS-SPEC.md), not an inefficiency. -->
+    <NoWarn>$(NoWarn);CA1707;CA1848;CA1873;CA1859</NoWarn>
+
+    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+
+</Project>
