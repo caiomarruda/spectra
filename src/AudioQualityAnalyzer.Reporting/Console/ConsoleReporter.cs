@@ -51,6 +51,27 @@ public static class ConsoleReporter
         }
         writer.WriteLine();
 
+        writer.WriteLine("-- Spectral --");
+        writer.WriteLine($"Effective Bandwidth:   {result.SpectralAnalysis.EffectiveBandwidthHz / 1000.0:F2} kHz (confidence: {result.SpectralAnalysis.BandwidthConfidence})");
+        writer.WriteLine($"Spectral Centroid:     {result.SpectralAnalysis.SpectralCentroidHz / 1000.0:F2} kHz");
+        writer.WriteLine($"Spectral Rolloff (85%):{result.SpectralAnalysis.SpectralRolloffHz / 1000.0:F2} kHz");
+        writer.WriteLine($"Cutoff Frequency:      {result.SpectralAnalysis.CutoffFrequencyHz / 1000.0:F2} kHz");
+        writer.WriteLine($"Cutoff Sharpness:      {result.SpectralAnalysis.CutoffSharpnessDbPerOctave.ToString("F1", culture)} dB/octave");
+        writer.WriteLine($"Cutoff Consistency:    {result.SpectralAnalysis.CutoffConsistency:P0}");
+        if (verbose)
+        {
+            writer.WriteLine($"Spectral Bandwidth:    {result.SpectralAnalysis.SpectralBandwidthHz / 1000.0:F2} kHz");
+            writer.WriteLine($"Spectral Flatness:     {result.SpectralAnalysis.SpectralFlatness.ToString("F4", culture)}");
+            writer.WriteLine($"Spectral Flux (avg):   {result.SpectralAnalysis.SpectralFluxAverage.ToString("E2", culture)}");
+            writer.WriteLine($"Spectral Contrast:     {result.SpectralAnalysis.SpectralContrast.ToString("F1", culture)} dB");
+            writer.WriteLine("  Band energies:");
+            foreach (var band in result.SpectralAnalysis.BandEnergies)
+            {
+                writer.WriteLine($"    {band.Label,-14} {band.AverageEnergyDb.ToString("F1", culture)} dB");
+            }
+        }
+        writer.WriteLine();
+
         writer.WriteLine("-- Waveform --");
         writer.WriteLine($"Peak:               {ToDbfs(result.WaveformAnalysis.PeakAmplitude)}");
         writer.WriteLine($"RMS:                {ToDbfs(result.WaveformAnalysis.RmsAmplitude)}");

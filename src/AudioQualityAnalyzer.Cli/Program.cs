@@ -1,3 +1,4 @@
+using AudioQualityAnalyzer.Analysis.Spectral;
 using AudioQualityAnalyzer.Analysis.Waveform;
 using AudioQualityAnalyzer.Audio.Decoding;
 using AudioQualityAnalyzer.Audio.Mp3;
@@ -43,6 +44,7 @@ try
         decoded.ChannelCount, decoded.SampleRateHz, decoded.DecoderName, decoded.DecoderVersion);
 
     var waveform = WaveformAnalyzer.Analyze(decoded);
+    var spectral = SpectralAnalyzer.Analyze(decoded);
 
     var result = new AudioAnalysisResult
     {
@@ -50,6 +52,7 @@ try
         FormatInfo = formatInfo,
         EncodingAnalysis = encodingAnalysis,
         WaveformAnalysis = waveform,
+        SpectralAnalysis = spectral,
     };
 
     ConsoleReporter.Report(result, options.Verbose, Console.Out);

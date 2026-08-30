@@ -11,4 +11,5 @@ public sealed record AudioAnalysisResult
     public required FormatInfo FormatInfo { get; init; }
     public required EncodingAnalysis EncodingAnalysis { get; init; }
     public required WaveformAnalysis WaveformAnalysis { get; init; }
+    public required SpectralAnalysis SpectralAnalysis { get; init; }
 }
