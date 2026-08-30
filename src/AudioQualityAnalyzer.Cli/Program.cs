@@ -15,6 +15,7 @@ using System.Text.Json.Serialization;
 using AudioQualityAnalyzer.Core.Decoding;
 using AudioQualityAnalyzer.Core.Models;
 using AudioQualityAnalyzer.Reporting.ConsoleReport;
+using AudioQualityAnalyzer.Reporting.Excel;
 using AudioQualityAnalyzer.Reporting.Html;
 using Microsoft.Extensions.Logging;
 
@@ -100,7 +101,7 @@ try
     }
     if (options.Excel)
     {
-        logger.LogWarning("--excel exporter is not implemented yet in this version.");
+        TryExport("Excel", () => ExcelReporter.WriteToFile(result, BuildExportPath(options.InputPath, "xlsx")));
     }
 }
 catch (Exception ex)
@@ -142,7 +143,7 @@ static void PrintUsage()
 
         Options:
           --html      Export HTML report (OriginalName.analysis.html)
-          --excel     Export Excel report (not yet implemented)
+          --excel     Export Excel report (OriginalName.analysis.xlsx)
           --json      Export raw JSON data (OriginalName.analysis.json)
           --verbose   Show all measured metrics
         """);

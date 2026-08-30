@@ -8,6 +8,10 @@
     <InternalsVisibleTo Include="AudioQualityAnalyzer.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
