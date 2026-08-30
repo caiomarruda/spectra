@@ -12,4 +12,7 @@ public sealed record AudioAnalysisResult
     public required EncodingAnalysis EncodingAnalysis { get; init; }
     public required WaveformAnalysis WaveformAnalysis { get; init; }
     public required SpectralAnalysis SpectralAnalysis { get; init; }
+    public required LoudnessAnalysis LoudnessAnalysis { get; init; }
+    public required DynamicRangeAnalysis DynamicRangeAnalysis { get; init; }
+    public required ClippingAnalysis ClippingAnalysis { get; init; }
 }

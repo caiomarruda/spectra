@@ -1,3 +1,5 @@
+using AudioQualityAnalyzer.Analysis.Dynamics;
+using AudioQualityAnalyzer.Analysis.Loudness;
 using AudioQualityAnalyzer.Analysis.Spectral;
 using AudioQualityAnalyzer.Analysis.Waveform;
 using AudioQualityAnalyzer.Audio.Decoding;
@@ -45,6 +47,9 @@ try
 
     var waveform = WaveformAnalyzer.Analyze(decoded);
     var spectral = SpectralAnalyzer.Analyze(decoded);
+    var loudness = LoudnessAnalyzer.Analyze(decoded);
+    var dynamicRange = DynamicRangeAnalyzer.Analyze(decoded, waveform);
+    var clipping = ClippingAnalyzer.Analyze(decoded);
 
     var result = new AudioAnalysisResult
     {
@@ -53,6 +58,9 @@ try
         EncodingAnalysis = encodingAnalysis,
         WaveformAnalysis = waveform,
         SpectralAnalysis = spectral,
+        LoudnessAnalysis = loudness,
+        DynamicRangeAnalysis = dynamicRange,
+        ClippingAnalysis = clipping,
     };
 
     ConsoleReporter.Report(result, options.Verbose, Console.Out);

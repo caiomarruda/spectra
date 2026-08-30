@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+    <PackageReference Include="R128Net" Version="1.1.0" />
   </ItemGroup>
 
   <PropertyGroup>

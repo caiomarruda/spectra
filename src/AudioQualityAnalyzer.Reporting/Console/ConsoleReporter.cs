@@ -72,6 +72,33 @@ public static class ConsoleReporter
         }
         writer.WriteLine();
 
+        writer.WriteLine("-- Loudness --");
+        writer.WriteLine($"Integrated Loudness:   {FormatLufs(result.LoudnessAnalysis.IntegratedLufs, culture)}");
+        writer.WriteLine($"Loudness Range:        {result.LoudnessAnalysis.LoudnessRangeLu.ToString("F1", culture)} LU");
+        writer.WriteLine($"Sample Peak:           {result.LoudnessAnalysis.SamplePeakDbfs.ToString("F2", culture)} dBFS");
+        writer.WriteLine($"True Peak:             {result.LoudnessAnalysis.TruePeakDbfs.ToString("F2", culture)} dBTP");
+        if (verbose)
+        {
+            writer.WriteLine($"Momentary Max:         {FormatLufs(result.LoudnessAnalysis.MomentaryMaxLufs, culture)}");
+            writer.WriteLine($"Short-Term Max:        {FormatLufs(result.LoudnessAnalysis.ShortTermMaxLufs, culture)}");
+        }
+        writer.WriteLine();
+
+        writer.WriteLine("-- Dynamic Range --");
+        writer.WriteLine($"Crest Factor:          {result.DynamicRangeAnalysis.CrestFactorDb.ToString("F1", culture)} dB");
+        writer.WriteLine($"Near Full Scale:       {result.DynamicRangeAnalysis.PercentSamplesNearFullScale.ToString("F3", culture)}% of samples");
+        if (verbose)
+        {
+            writer.WriteLine($"RMS Window Range:      {result.DynamicRangeAnalysis.RmsWindowMinDb.ToString("F1", culture)} to {result.DynamicRangeAnalysis.RmsWindowMaxDb.ToString("F1", culture)} dB (median {result.DynamicRangeAnalysis.RmsWindowMedianDb.ToString("F1", culture)}, stddev {result.DynamicRangeAnalysis.RmsWindowStdDevDb.ToString("F1", culture)})");
+        }
+        writer.WriteLine();
+
+        writer.WriteLine("-- Clipping --");
+        writer.WriteLine($"Clipped Samples:       {result.ClippingAnalysis.TotalClippedSamples} ({result.ClippingAnalysis.ClippedPercentage.ToString("F4", culture)}%)");
+        writer.WriteLine($"Clip Events:           {result.ClippingAnalysis.ClipEventCount}");
+        writer.WriteLine($"Longest Clip:          {result.ClippingAnalysis.LongestClipDuration.TotalMilliseconds.ToString("F1", culture)} ms{(result.ClippingAnalysis.IsSevere ? " (SEVERE)" : "")}");
+        writer.WriteLine();
+
         writer.WriteLine("-- Waveform --");
         writer.WriteLine($"Peak:               {ToDbfs(result.WaveformAnalysis.PeakAmplitude)}");
         writer.WriteLine($"RMS:                {ToDbfs(result.WaveformAnalysis.RmsAmplitude)}");
@@ -89,6 +116,9 @@ public static class ConsoleReporter
 
     private static string DescribeMpeg(Core.Enums.MpegVersion version, Core.Enums.MpegLayer layer) =>
         $"MPEG {version switch { Core.Enums.MpegVersion.Version1 => "1", Core.Enums.MpegVersion.Version2 => "2", Core.Enums.MpegVersion.Version2_5 => "2.5", _ => "?" }} Layer {layer switch { Core.Enums.MpegLayer.LayerI => "I", Core.Enums.MpegLayer.LayerII => "II", Core.Enums.MpegLayer.LayerIII => "III", _ => "?" }}";
+
+    private static string FormatLufs(double lufs, CultureInfo culture) =>
+        double.IsNegativeInfinity(lufs) ? "-inf LUFS (silent)" : $"{lufs.ToString("F1", culture)} LUFS";
 
     private static string ToDbfs(float linearAmplitude)
     {
