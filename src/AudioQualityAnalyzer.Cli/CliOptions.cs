@@ -2,7 +2,12 @@ namespace AudioQualityAnalyzer.Cli;
 
 public sealed record CliOptions
 {
-    public required string InputPath { get; init; }
+    /// <summary>Single-file mode. Mutually exclusive with <see cref="FolderPath"/>; exactly one of the two is set.</summary>
+    public string? InputPath { get; init; }
+
+    /// <summary>Folder (batch) mode: recursively analyzes every .mp3 under this path.</summary>
+    public string? FolderPath { get; init; }
+
     public bool Html { get; init; }
     public bool Excel { get; init; }
     public bool Json { get; init; }
@@ -11,6 +16,7 @@ public sealed record CliOptions
     public static CliOptions? Parse(string[] args)
     {
         string? inputPath = null;
+        string? folderPath = null;
         var html = false;
         var excel = false;
         var json = false;
@@ -26,6 +32,13 @@ public sealed record CliOptions
                         return null;
                     }
                     inputPath = args[++i];
+                    break;
+                case "--folder":
+                    if (i + 1 >= args.Length)
+                    {
+                        return null;
+                    }
+                    folderPath = args[++i];
                     break;
                 case "--html":
                     html = true;
@@ -49,8 +62,13 @@ public sealed record CliOptions
             }
         }
 
-        return inputPath is null
+        if (inputPath is not null && folderPath is not null)
+        {
+            return null; // Mutually exclusive: a single file or a folder scan, not both.
+        }
+
+        return inputPath is null && folderPath is null
             ? null
-            : new CliOptions { InputPath = inputPath, Html = html, Excel = excel, Json = json, Verbose = verbose };
+            : new CliOptions { InputPath = inputPath, FolderPath = folderPath, Html = html, Excel = excel, Json = json, Verbose = verbose };
     }
 }

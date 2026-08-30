@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using AudioQualityAnalyzer.Core.Enums;
 using AudioQualityAnalyzer.Core.Models;
 
 namespace AudioQualityAnalyzer.Reporting.Excel;
@@ -28,6 +29,102 @@ public static class ExcelReporter
         WriteRawMetrics(workbook.Worksheets.Add("Raw Metrics"), result);
 
         workbook.SaveAs(path);
+    }
+
+    /// <summary>One row per track (not the full 11-sheet detail — impractical for a whole folder scan), plus an aggregated findings sheet.</summary>
+    public static void WriteBatchToFile(IReadOnlyList<BatchTrackResult> successes, IReadOnlyList<BatchTrackFailure> failures, string path)
+    {
+        using var workbook = new XLWorkbook();
+
+        WriteBatchSummary(workbook.Worksheets.Add("Summary"), successes);
+        WriteBatchFindings(workbook.Worksheets.Add("Findings"), successes);
+        if (failures.Count > 0)
+        {
+            WriteBatchFailures(workbook.Worksheets.Add("Failures"), failures);
+        }
+
+        workbook.SaveAs(path);
+    }
+
+    private static void WriteBatchSummary(IXLWorksheet ws, IReadOnlyList<BatchTrackResult> successes)
+    {
+        var headers = new[]
+        {
+            "File", "Format", "Bitrate (kbps)", "Sample Rate (Hz)", "Duration", "Overall Score", "Encoding Score",
+            "Spectral Score", "Technical Score", "Mastering Score", "Transcoding Probability (%)", "Transcoding Confidence", "Verdict",
+        };
+        for (var c = 0; c < headers.Length; c++)
+        {
+            ws.Cell(1, c + 1).Value = headers[c];
+        }
+        ws.Row(1).Style.Font.Bold = true;
+
+        var row = 2;
+        foreach (var track in successes.OrderBy(t => t.Result.OverallAssessment.OverallQualityScore))
+        {
+            var r = track.Result;
+            var a = r.OverallAssessment;
+            ws.Cell(row, 1).Value = track.RelativePath;
+            ws.Cell(row, 2).Value = r.FormatInfo.Format;
+            ws.Cell(row, 3).Value = r.EncodingAnalysis.DeclaredBitrateKbps;
+            ws.Cell(row, 4).Value = r.FormatInfo.SampleRateHz;
+            ws.Cell(row, 5).Value = r.FileInfo.Duration.ToString(@"hh\:mm\:ss");
+            ws.Cell(row, 6).Value = a.OverallQualityScore;
+            ws.Cell(row, 7).Value = a.EncodingQualityScore;
+            ws.Cell(row, 8).Value = a.SpectralQualityScore;
+            ws.Cell(row, 9).Value = a.TechnicalQualityScore;
+            ws.Cell(row, 10).Value = a.MasteringQualityScore;
+            ws.Cell(row, 11).Value = r.TranscodingAnalysis.Probability;
+            ws.Cell(row, 12).Value = r.TranscodingAnalysis.Confidence.ToString();
+            ws.Cell(row, 13).Value = a.Verdict;
+            row++;
+        }
+        ws.SheetView.FreezeRows(1);
+        ws.Columns().AdjustToContents();
+    }
+
+    private static void WriteBatchFindings(IXLWorksheet ws, IReadOnlyList<BatchTrackResult> successes)
+    {
+        var headers = new[] { "File", "Code", "Title", "Severity", "Confidence", "Description", "Evidence" };
+        for (var c = 0; c < headers.Length; c++)
+        {
+            ws.Cell(1, c + 1).Value = headers[c];
+        }
+        ws.Row(1).Style.Font.Bold = true;
+
+        var row = 2;
+        foreach (var track in successes)
+        {
+            foreach (var finding in track.Result.OverallAssessment.Findings.Where(f => f.Severity != Severity.Info))
+            {
+                ws.Cell(row, 1).Value = track.RelativePath;
+                ws.Cell(row, 2).Value = finding.Code;
+                ws.Cell(row, 3).Value = finding.Title;
+                ws.Cell(row, 4).Value = finding.Severity.ToString();
+                ws.Cell(row, 5).Value = finding.Confidence.ToString();
+                ws.Cell(row, 6).Value = finding.Description;
+                ws.Cell(row, 7).Value = string.Join(" | ", finding.Evidence);
+                row++;
+            }
+        }
+        ws.SheetView.FreezeRows(1);
+        ws.Columns().AdjustToContents();
+    }
+
+    private static void WriteBatchFailures(IXLWorksheet ws, IReadOnlyList<BatchTrackFailure> failures)
+    {
+        ws.Cell(1, 1).Value = "File";
+        ws.Cell(1, 2).Value = "Error";
+        ws.Row(1).Style.Font.Bold = true;
+
+        var row = 2;
+        foreach (var failure in failures)
+        {
+            ws.Cell(row, 1).Value = failure.RelativePath;
+            ws.Cell(row, 2).Value = failure.ErrorMessage;
+            row++;
+        }
+        ws.Columns().AdjustToContents();
     }
 
     private static void WriteSummary(IXLWorksheet ws, AudioAnalysisResult result)

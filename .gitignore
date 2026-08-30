@@ -3,6 +3,14 @@ bin/
 obj/
 *.user
 
+## Generated analysis reports (reproducible from the CLI, not source)
+*.analysis.html
+*.analysis.json
+*.analysis.xlsx
+*.batch-analysis.html
+*.batch-analysis.json
+*.batch-analysis.xlsx
+
 ## OS
 .DS_Store
 

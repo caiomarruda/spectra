@@ -58,4 +58,42 @@ public class CliOptionsTests
 
         Assert.Null(options);
     }
+
+    [Fact]
+    public void Parse_FolderFlag_SetsFolderPath()
+    {
+        var options = CliOptions.Parse(["--folder", "/some/dir"]);
+
+        Assert.NotNull(options);
+        Assert.Equal("/some/dir", options!.FolderPath);
+        Assert.Null(options.InputPath);
+    }
+
+    [Fact]
+    public void Parse_FolderFlagMissingValue_ReturnsNull()
+    {
+        var options = CliOptions.Parse(["--folder"]);
+
+        Assert.Null(options);
+    }
+
+    [Fact]
+    public void Parse_BothInputAndFolder_ReturnsNull()
+    {
+        var options = CliOptions.Parse(["song.mp3", "--folder", "/some/dir"]);
+
+        Assert.Null(options);
+    }
+
+    [Fact]
+    public void Parse_FolderWithExportFlags_AreRecognized()
+    {
+        var options = CliOptions.Parse(["--folder", "/some/dir", "--html", "--excel", "--json", "--verbose"]);
+
+        Assert.NotNull(options);
+        Assert.True(options!.Html);
+        Assert.True(options.Excel);
+        Assert.True(options.Json);
+        Assert.True(options.Verbose);
+    }
 }
