@@ -29,10 +29,11 @@ public static class SpectralSettings
     public const double CutoffConsistencyToleranceHz = 1000.0;
 
     /// <summary>
-    /// A frame below this absolute total-energy level is excluded from cutoff-consistency voting
-    /// even if it is the "loudest" frame in the track — needed alongside the relative
-    /// (<see cref="SilentFrameRelativeThresholdDb"/>) check because a track that is uniformly
-    /// near-silent throughout has no dynamic range for the relative check to work with.
+    /// Below this peak amplitude (~ -80 dBFS), the whole track is treated as digital silence and
+    /// cutoff detection is skipped entirely (Low confidence, 0 consistency) rather than attempted —
+    /// on the raw waveform's peak, a universal dBFS-comparable scale, not an internal FFT-energy
+    /// quantity calibrated against any one example file (see the note on <see cref="SilentFrameRelativeThresholdDb"/>'s
+    /// use in SpectralAnalyzer.ComputeTrackCutoff for the bug this replaced).
     /// </summary>
-    public const double AbsoluteMinimumFrameEnergyDb = -60.0;
+    public const float TrackSilencePeakAmplitude = 0.0001f;
 }

@@ -128,7 +128,13 @@ public static class SpectralAnalyzer
         // music. Per-frame detection compares each frame only against its own reference level, so
         // it doesn't have this problem, and aggregating those answers over time is also a more
         // direct read of section 6's "persistência ao longo do tempo" requirement.
-        var (trackCutoffHz, consistency, confidence) = ComputeTrackCutoff(perFrameCutoffHz, perFrameTotalEnergyDb);
+        // Whole-track silence is checked once here, on the raw waveform's own peak amplitude (a
+        // universal, directly-interpretable dBFS scale) rather than folded into the per-frame
+        // loop's own internal FFT-energy units, which aren't calibrated to any absolute reference.
+        var peakAmplitude = mono.Length > 0 ? mono.Max(MathF.Abs) : 0f;
+        var (trackCutoffHz, consistency, confidence) = peakAmplitude < SpectralSettings.TrackSilencePeakAmplitude
+            ? (0, 0, ConfidenceLevel.Low)
+            : ComputeTrackCutoff(perFrameCutoffHz, perFrameTotalEnergyDb);
         var trackCutoffBin = FrequencyToBin(trackCutoffHz, binCount, sampleRate);
 
         var octaveBelowBin = FrequencyToBin(trackCutoffHz / 2.0, binCount, sampleRate);
@@ -392,17 +398,20 @@ public static class SpectralAnalyzer
             return (0, 0, ConfidenceLevel.Low);
         }
 
-        // A frame only counts as evidence if it is both loud relative to the track's own loudest
-        // moment (excludes quiet passages within an otherwise dynamic track) and above an absolute
-        // floor (excludes the degenerate case where the whole track is near-silent, which would
-        // otherwise make every frame "relatively loud" simply because they are all equally quiet).
+        // A frame only counts as evidence if it is loud relative to the track's own loudest moment
+        // — this excludes quiet passages within an otherwise dynamic track. Deliberately relative,
+        // not an absolute dB floor: an earlier version used a fixed absolute threshold calibrated
+        // against a single loud reference file, which silently discarded every frame (confidence
+        // Low, 0% bandwidth) on a merely quieter — but perfectly legitimate — recording. The
+        // degenerate "whole track is silent" case this guarded against is instead handled once,
+        // up front, by the caller checking the track's overall peak amplitude directly.
         var loudestDb = perFrameTotalEnergyDb.Max();
         var relativeFloor = loudestDb + SpectralSettings.SilentFrameRelativeThresholdDb;
 
         var consideredCutoffs = new List<double>();
         for (var i = 0; i < perFrameCutoffHz.Count; i++)
         {
-            if (perFrameTotalEnergyDb[i] >= relativeFloor && perFrameTotalEnergyDb[i] >= SpectralSettings.AbsoluteMinimumFrameEnergyDb)
+            if (perFrameTotalEnergyDb[i] >= relativeFloor)
             {
                 consideredCutoffs.Add(perFrameCutoffHz[i]);
             }
