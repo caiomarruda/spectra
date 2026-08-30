@@ -6,6 +6,7 @@ namespace AudioQualityAnalyzer.Analysis.Stereo;
 public static class StereoAnalyzer
 {
     private const double Epsilon = 1e-30;
+    private const double CorrelationWindowSeconds = 0.5;
 
     /// <summary>Returns null for mono audio — there is no stereo image to analyze.</summary>
     public static StereoAnalysis? Analyze(DecodedAudio audio)
@@ -65,7 +66,41 @@ public static class StereoAnalyzer
             HasPhaseProblems = correlation <= StereoSettings.PhaseProblemCorrelationThreshold,
             HasPolarityInversion = correlation <= StereoSettings.PolarityInversionCorrelationThreshold,
             HasExcessiveSideContent = sideToMidDb >= StereoSettings.ExcessiveSideContentDb,
+            CorrelationOverTime = ComputeCorrelationOverTime(left, right, sampleCount, audio.SampleRateHz),
         };
+    }
+
+    private static List<StereoCorrelationPoint> ComputeCorrelationOverTime(float[] left, float[] right, int sampleCount, int sampleRateHz)
+    {
+        var points = new List<StereoCorrelationPoint>();
+        var windowSize = (int)(CorrelationWindowSeconds * sampleRateHz);
+        if (windowSize <= 0)
+        {
+            return points;
+        }
+
+        for (var start = 0; start < sampleCount; start += windowSize)
+        {
+            var length = Math.Min(windowSize, sampleCount - start);
+            double sumLR = 0, sumLL = 0, sumRR = 0;
+            for (var i = start; i < start + length; i++)
+            {
+                var l = (double)left[i];
+                var r = (double)right[i];
+                sumLR += l * r;
+                sumLL += l * l;
+                sumRR += r * r;
+            }
+
+            var windowCorrelation = sumLL > Epsilon && sumRR > Epsilon ? sumLR / Math.Sqrt(sumLL * sumRR) : 0.0;
+            points.Add(new StereoCorrelationPoint
+            {
+                Time = TimeSpan.FromSeconds((double)start / sampleRateHz),
+                Correlation = windowCorrelation,
+            });
+        }
+
+        return points;
     }
 
     private static double ToDb(double linear) => linear > 0 ? 20.0 * Math.Log10(linear) : double.NegativeInfinity;

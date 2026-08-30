@@ -22,4 +22,7 @@ public sealed record StereoAnalysis
     public required bool HasPhaseProblems { get; init; }
     public required bool HasPolarityInversion { get; init; }
     public required bool HasExcessiveSideContent { get; init; }
+
+    /// <summary>Windowed correlation, for the HTML report's correlation-over-time chart.</summary>
+    public required IReadOnlyList<StereoCorrelationPoint> CorrelationOverTime { get; init; }
 }

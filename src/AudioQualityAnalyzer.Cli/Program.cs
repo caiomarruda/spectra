@@ -9,9 +9,13 @@ using AudioQualityAnalyzer.Analysis.Waveform;
 using AudioQualityAnalyzer.Audio.Decoding;
 using AudioQualityAnalyzer.Audio.Mp3;
 using AudioQualityAnalyzer.Cli;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using AudioQualityAnalyzer.Core.Decoding;
 using AudioQualityAnalyzer.Core.Models;
 using AudioQualityAnalyzer.Reporting.ConsoleReport;
+using AudioQualityAnalyzer.Reporting.Html;
 using Microsoft.Extensions.Logging;
 
 var options = CliOptions.Parse(args);
@@ -37,6 +41,14 @@ if (!string.Equals(Path.GetExtension(options.InputPath), ".mp3", StringCompariso
     logger.LogError("Only MP3 files are supported in this version.");
     return 1;
 }
+
+var jsonOptions = new JsonSerializerOptions
+{
+    WriteIndented = true,
+    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    Converters = { new JsonStringEnumConverter() },
+    NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+};
 
 try
 {
@@ -78,9 +90,17 @@ try
 
     ConsoleReporter.Report(result, options.Verbose, Console.Out);
 
-    if (options.Html || options.Excel || options.Json)
+    if (options.Html)
     {
-        logger.LogWarning("--html/--excel/--json exporters are not implemented yet in this version.");
+        TryExport("HTML", () => HtmlReporter.WriteToFile(result, BuildExportPath(options.InputPath, "html")));
+    }
+    if (options.Json)
+    {
+        TryExport("JSON", () => File.WriteAllText(BuildExportPath(options.InputPath, "json"), JsonSerializer.Serialize(result, jsonOptions)));
+    }
+    if (options.Excel)
+    {
+        logger.LogWarning("--excel exporter is not implemented yet in this version.");
     }
 }
 catch (Exception ex)
@@ -91,6 +111,28 @@ catch (Exception ex)
 
 return 0;
 
+// A failed export must not be reported as an analysis failure (04-REPORTS.md "Export Errors").
+static void TryExport(string label, Action export)
+{
+    try
+    {
+        export();
+        Console.WriteLine($"{label} export: SUCCESS");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"{label} export: FAILED");
+        Console.WriteLine($"Reason: {ex.Message}");
+    }
+}
+
+static string BuildExportPath(string inputPath, string extension)
+{
+    var directory = Path.GetDirectoryName(inputPath) ?? ".";
+    var nameWithoutExtension = Path.GetFileNameWithoutExtension(inputPath);
+    return Path.Combine(directory, $"{nameWithoutExtension}.analysis.{extension}");
+}
+
 static void PrintUsage()
 {
     Console.WriteLine("""
@@ -99,9 +141,9 @@ static void PrintUsage()
           AudioQualityAnalyzer --input <path-to.mp3>
 
         Options:
-          --html      Export HTML report (not yet implemented)
+          --html      Export HTML report (OriginalName.analysis.html)
           --excel     Export Excel report (not yet implemented)
-          --json      Export raw JSON data (not yet implemented)
+          --json      Export raw JSON data (OriginalName.analysis.json)
           --verbose   Show all measured metrics
         """);
 }

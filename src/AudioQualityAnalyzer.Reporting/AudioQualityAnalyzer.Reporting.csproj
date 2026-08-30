@@ -4,6 +4,10 @@
     <ProjectReference Include="..\AudioQualityAnalyzer.Core\AudioQualityAnalyzer.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="AudioQualityAnalyzer.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
