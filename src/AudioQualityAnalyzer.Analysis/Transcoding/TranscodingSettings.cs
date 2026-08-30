@@ -8,7 +8,8 @@ namespace AudioQualityAnalyzer.Analysis.Transcoding;
 /// </summary>
 public static class TranscodingSettings
 {
-    public static readonly IReadOnlyList<(int BitrateKbps, double ExpectedBandwidthHz)> ExpectedBandwidthTable =
+    /// <summary>Input = bitrate (kbps), Output = expected effective bandwidth (Hz).</summary>
+    public static readonly IReadOnlyList<(double Input, double Output)> ExpectedBandwidthTable =
     [
         (32, 8_000),
         (48, 10_000),

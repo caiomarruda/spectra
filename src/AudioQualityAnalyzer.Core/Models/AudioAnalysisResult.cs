@@ -20,4 +20,6 @@ public sealed record AudioAnalysisResult
     public StereoAnalysis? StereoAnalysis { get; init; }
 
     public required TranscodingAnalysis TranscodingAnalysis { get; init; }
+    public required NoiseAnalysis NoiseAnalysis { get; init; }
+    public required OverallAssessment OverallAssessment { get; init; }
 }

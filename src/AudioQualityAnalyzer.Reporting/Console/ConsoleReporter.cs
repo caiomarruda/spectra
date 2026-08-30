@@ -20,6 +20,24 @@ public static class ConsoleReporter
         writer.WriteLine($"Size:       {result.FileInfo.SizeInBytes / 1024.0 / 1024.0:F2} MB");
         writer.WriteLine();
 
+        writer.WriteLine($"VERDICT: {result.OverallAssessment.Verdict}");
+        writer.WriteLine();
+        writer.WriteLine("-- Scores --");
+        writer.WriteLine($"Overall:    {result.OverallAssessment.OverallQualityScore.ToString("F0", culture)}/100");
+        writer.WriteLine($"Encoding:   {result.OverallAssessment.EncodingQualityScore.ToString("F0", culture)}/100");
+        writer.WriteLine($"Spectral:   {result.OverallAssessment.SpectralQualityScore.ToString("F0", culture)}/100");
+        writer.WriteLine($"Technical:  {result.OverallAssessment.TechnicalQualityScore.ToString("F0", culture)}/100");
+        writer.WriteLine($"Mastering:  {result.OverallAssessment.MasteringQualityScore.ToString("F0", culture)}/100");
+        if (result.OverallAssessment.Findings.Count > 0)
+        {
+            writer.WriteLine("Findings:");
+            foreach (var finding in result.OverallAssessment.Findings)
+            {
+                writer.WriteLine($"  [{finding.Severity}] {finding.Title}");
+            }
+        }
+        writer.WriteLine();
+
         writer.WriteLine("-- Format --");
         writer.WriteLine($"Format:         {result.FormatInfo.Format} ({DescribeMpeg(result.FormatInfo.MpegVersion, result.FormatInfo.MpegLayer)})");
         writer.WriteLine($"Sample Rate:    {result.FormatInfo.SampleRateHz} Hz");
@@ -136,6 +154,15 @@ public static class ConsoleReporter
             {
                 writer.WriteLine($"Flags:                 {string.Join(", ", flags)}");
             }
+            writer.WriteLine();
+        }
+
+        if (verbose)
+        {
+            writer.WriteLine("-- Noise --");
+            writer.WriteLine($"Noise Floor:           {result.NoiseAnalysis.NoiseFloorDb.ToString("F1", culture)} dB");
+            writer.WriteLine($"DC Offset:             {(result.NoiseAnalysis.HasSignificantDcOffset ? "significant" : "negligible")}");
+            writer.WriteLine($"Internal Silence:      {(result.NoiseAnalysis.HasExcessiveInternalSilence ? "excessive gap detected" : "none")}");
             writer.WriteLine();
         }
 

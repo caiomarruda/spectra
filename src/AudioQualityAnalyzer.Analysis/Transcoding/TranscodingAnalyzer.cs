@@ -1,3 +1,4 @@
+using AudioQualityAnalyzer.Analysis.Common;
 using AudioQualityAnalyzer.Core.Enums;
 using AudioQualityAnalyzer.Core.Models;
 
@@ -16,7 +17,7 @@ public static class TranscodingAnalyzer
             ? encoding.DeclaredBitrateKbps
             : (int)Math.Round(encoding.AverageBitrateKbps);
 
-        var expectedBandwidthHz = InterpolateExpectedBandwidth(referenceBitrateKbps);
+        var expectedBandwidthHz = PiecewiseLinear.Interpolate(TranscodingSettings.ExpectedBandwidthTable, referenceBitrateKbps);
         var deficitHz = expectedBandwidthHz - spectral.EffectiveBandwidthHz;
 
         var bandwidthScore = ComputeBandwidthScore(deficitHz);
@@ -60,34 +61,6 @@ public static class TranscodingAnalyzer
             Confidence = spectral.BandwidthConfidence,
             Findings = findings,
         };
-    }
-
-    private static double InterpolateExpectedBandwidth(int bitrateKbps)
-    {
-        var table = TranscodingSettings.ExpectedBandwidthTable;
-        if (bitrateKbps <= table[0].BitrateKbps)
-        {
-            return table[0].ExpectedBandwidthHz;
-        }
-        if (bitrateKbps >= table[^1].BitrateKbps)
-        {
-            return table[^1].ExpectedBandwidthHz;
-        }
-
-        for (var i = 0; i < table.Count - 1; i++)
-        {
-            var (lowKbps, lowHz) = table[i];
-            var (highKbps, highHz) = table[i + 1];
-            if (bitrateKbps < lowKbps || bitrateKbps > highKbps)
-            {
-                continue;
-            }
-
-            var fraction = (double)(bitrateKbps - lowKbps) / (highKbps - lowKbps);
-            return lowHz + (fraction * (highHz - lowHz));
-        }
-
-        return table[^1].ExpectedBandwidthHz;
     }
 
     private static double ComputeBandwidthScore(double deficitHz)

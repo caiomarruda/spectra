@@ -1,5 +1,7 @@
 using AudioQualityAnalyzer.Analysis.Dynamics;
 using AudioQualityAnalyzer.Analysis.Loudness;
+using AudioQualityAnalyzer.Analysis.Noise;
+using AudioQualityAnalyzer.Analysis.Scoring;
 using AudioQualityAnalyzer.Analysis.Spectral;
 using AudioQualityAnalyzer.Analysis.Stereo;
 using AudioQualityAnalyzer.Analysis.Transcoding;
@@ -54,6 +56,9 @@ try
     var clipping = ClippingAnalyzer.Analyze(decoded);
     var stereo = StereoAnalyzer.Analyze(decoded);
     var transcoding = TranscodingAnalyzer.Analyze(encodingAnalysis, spectral);
+    var noise = NoiseAnalyzer.Analyze(decoded, waveform);
+    var overallAssessment = QualityScorer.Analyze(
+        encodingAnalysis, spectral, dynamicRange, clipping, loudness, stereo, noise, transcoding);
 
     var result = new AudioAnalysisResult
     {
@@ -67,6 +72,8 @@ try
         ClippingAnalysis = clipping,
         StereoAnalysis = stereo,
         TranscodingAnalysis = transcoding,
+        NoiseAnalysis = noise,
+        OverallAssessment = overallAssessment,
     };
 
     ConsoleReporter.Report(result, options.Verbose, Console.Out);
