@@ -15,4 +15,7 @@ public sealed record AudioAnalysisResult
     public required LoudnessAnalysis LoudnessAnalysis { get; init; }
     public required DynamicRangeAnalysis DynamicRangeAnalysis { get; init; }
     public required ClippingAnalysis ClippingAnalysis { get; init; }
+
+    /// <summary>Null for mono files — there is no stereo image to describe.</summary>
+    public StereoAnalysis? StereoAnalysis { get; init; }
 }

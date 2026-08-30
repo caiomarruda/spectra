@@ -99,6 +99,30 @@ public static class ConsoleReporter
         writer.WriteLine($"Longest Clip:          {result.ClippingAnalysis.LongestClipDuration.TotalMilliseconds.ToString("F1", culture)} ms{(result.ClippingAnalysis.IsSevere ? " (SEVERE)" : "")}");
         writer.WriteLine();
 
+        if (result.StereoAnalysis is { } stereo)
+        {
+            writer.WriteLine("-- Stereo --");
+            writer.WriteLine($"Correlation:           {stereo.CorrelationCoefficient.ToString("F2", culture)}");
+            writer.WriteLine($"Balance:               {stereo.ChannelBalanceDb.ToString("+0.00;-0.00", culture)} dB");
+            writer.WriteLine($"Mono Compatibility:    {stereo.MonoCompatibilityRatio.ToString("F2", culture)}");
+            if (verbose)
+            {
+                writer.WriteLine($"Mid/Side Energy:       {stereo.MidEnergyDb.ToString("F1", culture)} / {stereo.SideEnergyDb.ToString("F1", culture)} dB (side-to-mid {stereo.SideToMidRatioDb.ToString("+0.0;-0.0", culture)})");
+            }
+            var flags = new List<string>();
+            if (stereo.IsChannelEffectivelyMissing) flags.Add("channel effectively missing");
+            if (stereo.IsSeverelyImbalanced) flags.Add("severe imbalance");
+            if (stereo.IsMonoDisguisedAsStereo) flags.Add("mono disguised as stereo");
+            if (stereo.HasPhaseProblems) flags.Add("phase problems");
+            if (stereo.HasPolarityInversion) flags.Add("polarity inversion");
+            if (stereo.HasExcessiveSideContent) flags.Add("excessive side content");
+            if (flags.Count > 0)
+            {
+                writer.WriteLine($"Flags:                 {string.Join(", ", flags)}");
+            }
+            writer.WriteLine();
+        }
+
         writer.WriteLine("-- Waveform --");
         writer.WriteLine($"Peak:               {ToDbfs(result.WaveformAnalysis.PeakAmplitude)}");
         writer.WriteLine($"RMS:                {ToDbfs(result.WaveformAnalysis.RmsAmplitude)}");

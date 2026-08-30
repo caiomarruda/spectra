@@ -1,6 +1,7 @@
 using AudioQualityAnalyzer.Analysis.Dynamics;
 using AudioQualityAnalyzer.Analysis.Loudness;
 using AudioQualityAnalyzer.Analysis.Spectral;
+using AudioQualityAnalyzer.Analysis.Stereo;
 using AudioQualityAnalyzer.Analysis.Waveform;
 using AudioQualityAnalyzer.Audio.Decoding;
 using AudioQualityAnalyzer.Audio.Mp3;
@@ -50,6 +51,7 @@ try
     var loudness = LoudnessAnalyzer.Analyze(decoded);
     var dynamicRange = DynamicRangeAnalyzer.Analyze(decoded, waveform);
     var clipping = ClippingAnalyzer.Analyze(decoded);
+    var stereo = StereoAnalyzer.Analyze(decoded);
 
     var result = new AudioAnalysisResult
     {
@@ -61,6 +63,7 @@ try
         LoudnessAnalysis = loudness,
         DynamicRangeAnalysis = dynamicRange,
         ClippingAnalysis = clipping,
+        StereoAnalysis = stereo,
     };
 
     ConsoleReporter.Report(result, options.Verbose, Console.Out);
