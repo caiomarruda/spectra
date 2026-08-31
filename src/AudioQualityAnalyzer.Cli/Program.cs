@@ -1,6 +1,8 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using AudioQualityAnalyzer.Analysis.Dynamics;
 using AudioQualityAnalyzer.Analysis.Loudness;
 using AudioQualityAnalyzer.Analysis.Noise;
@@ -106,36 +108,53 @@ static int RunFolderMode(CliOptions options, ILogger logger, JsonSerializerOptio
         return 0;
     }
 
-    Console.WriteLine($"Found {mp3Files.Count} MP3 file(s) under {folderPath}");
+    var threadCount = options.Threads ?? Environment.ProcessorCount;
+    Console.WriteLine($"Found {mp3Files.Count} MP3 file(s) under {folderPath} — analyzing with {threadCount} thread(s)");
     Console.WriteLine();
 
-    var successes = new List<BatchTrackResult>();
-    var failures = new List<BatchTrackFailure>();
+    // Each file's analysis is independent (no shared mutable state across analyzers — every
+    // analyzer is a pure static function, and NLayerAudioDecoder/LoudnessMeter are instantiated
+    // fresh per call), so files are processed concurrently. Results are written into a
+    // pre-sized, index-addressed array (one slot per thread, no contention) so the final
+    // successes/failures lists stay in the original file-discovery order regardless of which
+    // thread finished which file first — deterministic reports, non-deterministic scheduling.
+    var slots = new (BatchTrackResult? Success, BatchTrackFailure? Failure)[mp3Files.Count];
+    var completedCount = 0;
+    var consoleLock = new object();
 
-    for (var i = 0; i < mp3Files.Count; i++)
+    Parallel.For(0, mp3Files.Count, new ParallelOptions { MaxDegreeOfParallelism = threadCount }, i =>
     {
         var path = mp3Files[i];
         var relativePath = Path.GetRelativePath(folderPath, path);
-        Console.Write($"[{i + 1}/{mp3Files.Count}] {relativePath} ... ");
 
+        string statusLine;
+        AudioAnalysisResult? result = null;
         try
         {
-            var result = AnalyzeFile(path);
-            successes.Add(new BatchTrackResult { RelativePath = relativePath, Result = result });
-            Console.WriteLine($"{result.OverallAssessment.Verdict} ({result.OverallAssessment.OverallQualityScore:F0}/100)");
+            result = AnalyzeFile(path);
+            slots[i] = (new BatchTrackResult { RelativePath = relativePath, Result = result }, null);
+            statusLine = $"{result.OverallAssessment.Verdict} ({result.OverallAssessment.OverallQualityScore:F0}/100)";
+        }
+        catch (Exception ex)
+        {
+            slots[i] = (null, new BatchTrackFailure { RelativePath = relativePath, ErrorMessage = ex.Message });
+            statusLine = $"FAILED ({ex.Message})";
+        }
 
-            if (options.Verbose)
+        var completed = Interlocked.Increment(ref completedCount);
+        lock (consoleLock)
+        {
+            Console.WriteLine($"[{completed}/{mp3Files.Count}] {relativePath} ... {statusLine}");
+            if (options.Verbose && result is not null)
             {
                 ConsoleReporter.Report(result, verbose: true, Console.Out);
                 Console.WriteLine();
             }
         }
-        catch (Exception ex)
-        {
-            failures.Add(new BatchTrackFailure { RelativePath = relativePath, ErrorMessage = ex.Message });
-            Console.WriteLine($"FAILED ({ex.Message})");
-        }
-    }
+    });
+
+    var successes = slots.Where(s => s.Success is not null).Select(s => s.Success!).ToList();
+    var failures = slots.Where(s => s.Failure is not null).Select(s => s.Failure!).ToList();
 
     Console.WriteLine();
     Console.WriteLine($"Analyzed {successes.Count} of {mp3Files.Count} file(s)" + (failures.Count > 0 ? $", {failures.Count} failed." : "."));
@@ -227,6 +246,7 @@ static void PrintUsage()
 
         Options:
           --folder    Recursively analyze every .mp3 under this folder (subfolders included)
+          --threads   Parallel files to analyze at once in --folder mode (default: all CPU cores)
           --html      Export HTML report
                         single file: OriginalName.analysis.html
                         --folder:    <FolderName>.batch-analysis.html in the scanned folder's root

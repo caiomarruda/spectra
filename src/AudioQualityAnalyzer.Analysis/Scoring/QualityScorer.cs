@@ -47,7 +47,7 @@ public static class QualityScorer
             ? encoding.DeclaredBitrateKbps
             : (int)Math.Round(encoding.AverageBitrateKbps);
 
-        var verdict = BuildVerdict(referenceBitrateKbps, transcoding, spectralScore, technicalScore, masteringScore, overallScore, loudness);
+        var verdict = BuildVerdict(referenceBitrateKbps, transcoding, spectralScore, technicalScore, masteringScore, loudness);
 
         return new OverallAssessment
         {
@@ -234,7 +234,7 @@ public static class QualityScorer
 
     private static string BuildVerdict(
         int referenceBitrateKbps, TranscodingAnalysis transcoding,
-        double spectralScore, double technicalScore, double masteringScore, double overallScore,
+        double spectralScore, double technicalScore, double masteringScore,
         LoudnessAnalysis loudness)
     {
         if (transcoding.Label is TranscodingProbabilityLabel.Likely or TranscodingProbabilityLabel.HighlyLikely)
@@ -262,7 +262,7 @@ public static class QualityScorer
             return $"GOOD {referenceBitrateKbps} KBPS";
         }
 
-        return $"{referenceBitrateKbps} KBPS / MIXED QUALITY (overall {overallScore:F0}/100)";
+        return $"{referenceBitrateKbps} KBPS / MIXED QUALITY";
     }
 
     private static AnalysisFinding BuildClippingFinding(ClippingAnalysis clipping, bool severe) => new()

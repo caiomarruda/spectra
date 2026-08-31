@@ -96,4 +96,41 @@ public class CliOptionsTests
         Assert.True(options.Json);
         Assert.True(options.Verbose);
     }
+
+    [Fact]
+    public void Parse_ThreadsFlag_SetsThreadCount()
+    {
+        var options = CliOptions.Parse(["--folder", "/some/dir", "--threads", "4"]);
+
+        Assert.NotNull(options);
+        Assert.Equal(4, options!.Threads);
+    }
+
+    [Fact]
+    public void Parse_NoThreadsFlag_LeavesThreadsNull()
+    {
+        var options = CliOptions.Parse(["--folder", "/some/dir"]);
+
+        Assert.NotNull(options);
+        Assert.Null(options!.Threads);
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("notanumber")]
+    public void Parse_InvalidThreadsValue_ReturnsNull(string value)
+    {
+        var options = CliOptions.Parse(["--folder", "/some/dir", "--threads", value]);
+
+        Assert.Null(options);
+    }
+
+    [Fact]
+    public void Parse_ThreadsFlagMissingValue_ReturnsNull()
+    {
+        var options = CliOptions.Parse(["--folder", "/some/dir", "--threads"]);
+
+        Assert.Null(options);
+    }
 }
