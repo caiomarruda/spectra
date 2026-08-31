@@ -22,4 +22,11 @@ public sealed record AudioAnalysisResult
     public required TranscodingAnalysis TranscodingAnalysis { get; init; }
     public required NoiseAnalysis NoiseAnalysis { get; init; }
     public required OverallAssessment OverallAssessment { get; init; }
+
+    /// <summary>
+    /// Non-fatal caveats about this analysis — e.g. decoding stopped early because of a
+    /// corrupted frame partway through the file, so every metric above reflects only the
+    /// successfully decoded portion, not the whole track. Empty when nothing is amiss.
+    /// </summary>
+    public required IReadOnlyList<string> Warnings { get; init; }
 }

@@ -151,6 +151,7 @@ public class ReferenceDatasetTests
             TranscodingAnalysis = transcoding,
             NoiseAnalysis = noise,
             OverallAssessment = overallAssessment,
+            Warnings = [],
         };
     }
 }

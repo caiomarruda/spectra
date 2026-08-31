@@ -6,7 +6,7 @@ namespace AudioQualityAnalyzer.Tests.Reporting;
 /// <summary>Builds a fully-populated, small but realistic AudioAnalysisResult for reporter tests.</summary>
 internal static class TestResultBuilder
 {
-    public static AudioAnalysisResult Build(bool includeStereo = true)
+    public static AudioAnalysisResult Build(bool includeStereo = true, IReadOnlyList<string>? warnings = null)
     {
         var bandEnergies = Enumerable.Range(0, 14)
             .Select(i => new SpectralBandEnergy { Label = $"Band{i}", LowHz = i * 1000, HighHz = (i + 1) * 1000, AverageEnergyDb = -60 + i })
@@ -184,6 +184,7 @@ internal static class TestResultBuilder
                 Verdict = "GOOD 128 KBPS",
                 Findings = [finding],
             },
+            Warnings = warnings ?? [],
         };
     }
 }

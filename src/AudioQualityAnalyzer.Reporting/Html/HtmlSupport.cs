@@ -21,6 +21,8 @@ internal static class HtmlSupport
         table.kv { width: 100%; border-collapse: collapse; font-size: 13px; }
         table.kv th { text-align: left; color: #666; font-weight: 500; padding: 5px 8px 5px 0; width: 40%; vertical-align: top; }
         table.kv td { padding: 5px 0; }
+        .warning-banner { max-width: 960px; margin: 16px auto 0; background: #fdf1dc; border: 1px solid #eecb8f; border-radius: 6px; padding: 10px 16px; }
+        .warning-banner p { margin: 4px 0; font-size: 13px; color: #7a5310; }
         .verdict { font-size: 16px; font-weight: 600; margin: 0 0 14px; }
         .scores { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
         .score-card { flex: 1; min-width: 90px; text-align: center; padding: 12px 8px; border-radius: 6px; background: #f0f1f4; }

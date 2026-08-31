@@ -51,7 +51,7 @@ public static class ExcelReporter
         var headers = new[]
         {
             "File", "Format", "Bitrate (kbps)", "Sample Rate (Hz)", "Duration", "Overall Score", "Encoding Score",
-            "Spectral Score", "Technical Score", "Mastering Score", "Transcoding Probability (%)", "Transcoding Confidence", "Verdict",
+            "Spectral Score", "Technical Score", "Mastering Score", "Transcoding Probability (%)", "Transcoding Confidence", "Verdict", "Warnings",
         };
         for (var c = 0; c < headers.Length; c++)
         {
@@ -77,6 +77,7 @@ public static class ExcelReporter
             ws.Cell(row, 11).Value = r.TranscodingAnalysis.Probability;
             ws.Cell(row, 12).Value = r.TranscodingAnalysis.Confidence.ToString();
             ws.Cell(row, 13).Value = a.Verdict;
+            ws.Cell(row, 14).Value = string.Join(" | ", r.Warnings);
             row++;
         }
         ws.SheetView.FreezeRows(1);
@@ -143,7 +144,11 @@ public static class ExcelReporter
         row = WriteNumber(ws, row, "Mastering Score", a.MasteringQualityScore);
         row = WriteNumber(ws, row, "Transcoding Probability (%)", result.TranscodingAnalysis.Probability);
         row = WriteText(ws, row, "Transcoding Confidence", result.TranscodingAnalysis.Confidence.ToString());
-        WriteText(ws, row, "Verdict", a.Verdict);
+        row = WriteText(ws, row, "Verdict", a.Verdict);
+        if (result.Warnings.Count > 0)
+        {
+            WriteText(ws, row, "Warnings", string.Join(" | ", result.Warnings));
+        }
         ws.Columns().AdjustToContents();
     }
 

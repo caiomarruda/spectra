@@ -20,6 +20,15 @@ public static class ConsoleReporter
         writer.WriteLine($"Size:       {result.FileInfo.SizeInBytes / 1024.0 / 1024.0:F2} MB");
         writer.WriteLine();
 
+        if (result.Warnings.Count > 0)
+        {
+            foreach (var warning in result.Warnings)
+            {
+                writer.WriteLine($"WARNING: {warning}");
+            }
+            writer.WriteLine();
+        }
+
         writer.WriteLine($"VERDICT: {result.OverallAssessment.Verdict}");
         writer.WriteLine();
         writer.WriteLine("-- Scores --");

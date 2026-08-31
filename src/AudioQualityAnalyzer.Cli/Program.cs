@@ -197,6 +197,12 @@ static AudioAnalysisResult AnalyzeFile(string path)
     var overallAssessment = QualityScorer.Analyze(
         encodingAnalysis, spectral, dynamicRange, clipping, loudness, stereo, noise, transcoding);
 
+    var warnings = new List<string>();
+    if (decoded.PartialDecodeReason is { } reason)
+    {
+        warnings.Add(reason + " — every metric below reflects only the decoded portion, not the full track.");
+    }
+
     return new AudioAnalysisResult
     {
         FileInfo = fileInfo,
@@ -211,6 +217,7 @@ static AudioAnalysisResult AnalyzeFile(string path)
         TranscodingAnalysis = transcoding,
         NoiseAnalysis = noise,
         OverallAssessment = overallAssessment,
+        Warnings = warnings,
     };
 }
 

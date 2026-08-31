@@ -12,4 +12,11 @@ public sealed record DecodedAudio
     public required string DecoderName { get; init; }
     public required string? DecoderVersion { get; init; }
     public required int SourceSampleRateHz { get; init; }
+
+    /// <summary>
+    /// Set when the decoder stopped early because of an error partway through the file (e.g. a
+    /// corrupted frame) — the samples above are real, decoded audio up to that point, not the
+    /// whole track. Null means the file decoded to completion normally.
+    /// </summary>
+    public string? PartialDecodeReason { get; init; }
 }

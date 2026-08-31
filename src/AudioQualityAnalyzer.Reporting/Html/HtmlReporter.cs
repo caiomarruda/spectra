@@ -27,6 +27,7 @@ public static class HtmlReporter
         sb.Append("</head><body>");
 
         AppendHeader(sb, result);
+        AppendWarnings(sb, result);
         AppendExecutiveSummary(sb, result, culture);
         AppendFileInformation(sb, result, culture);
         AppendSpectral(sb, result, culture);
@@ -47,6 +48,21 @@ public static class HtmlReporter
         sb.Append("<header><h1>Audio Quality Analysis</h1>");
         sb.Append($"<p class=\"file\">{Html(result.FileInfo.FileName)}</p>");
         sb.Append($"<p class=\"muted\">Generated {DateTime.Now:yyyy-MM-dd HH:mm}</p></header>");
+    }
+
+    private static void AppendWarnings(StringBuilder sb, AudioAnalysisResult result)
+    {
+        if (result.Warnings.Count == 0)
+        {
+            return;
+        }
+
+        sb.Append("<div class=\"warning-banner\">");
+        foreach (var warning in result.Warnings)
+        {
+            sb.Append($"<p><strong>Warning:</strong> {Html(warning)}</p>");
+        }
+        sb.Append("</div>");
     }
 
     private static void AppendExecutiveSummary(StringBuilder sb, AudioAnalysisResult result, CultureInfo culture)

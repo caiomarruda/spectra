@@ -31,9 +31,32 @@ public sealed class NLayerAudioDecoder : IAudioDecoder
         }
 
         var interleavedBuffer = new float[ReadChunkSizeInFrames * channelCount];
-        int samplesRead;
-        while ((samplesRead = mpegFile.ReadSamples(interleavedBuffer, 0, interleavedBuffer.Length)) > 0)
+        string? partialDecodeReason = null;
+        while (true)
         {
+            int samplesRead;
+            try
+            {
+                samplesRead = mpegFile.ReadSamples(interleavedBuffer, 0, interleavedBuffer.Length);
+            }
+            catch (Exception ex) when (ex is IndexOutOfRangeException or ArgumentException or InvalidDataException)
+            {
+                // A corrupted frame partway through a real-world file (bit-rot, a bad rip, a
+                // truncated download) can crash NLayer's own frame decoder — this is not our
+                // MP3 parser's doing (see the two consecutive frame validation there) and NLayer
+                // exposes no way to skip just the bad frame and resume. Keep every sample
+                // successfully decoded before the failure rather than discarding the whole file;
+                // the caller surfaces PartialDecodeReason so this is never presented as a full,
+                // reliable analysis.
+                partialDecodeReason = $"Decoding stopped after {TimeSpan.FromSeconds((double)channels[0].Count / sampleRateHz):hh\\:mm\\:ss} due to a decoder error: {ex.Message}";
+                break;
+            }
+
+            if (samplesRead <= 0)
+            {
+                break;
+            }
+
             var framesRead = samplesRead / channelCount;
             for (var frame = 0; frame < framesRead; frame++)
             {
@@ -52,6 +75,7 @@ public sealed class NLayerAudioDecoder : IAudioDecoder
             DecoderName = "NLayer",
             DecoderVersion = typeof(MpegFile).Assembly.GetName().Version?.ToString(),
             SourceSampleRateHz = sampleRateHz,
+            PartialDecodeReason = partialDecodeReason,
         };
     }
 

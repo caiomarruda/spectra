@@ -65,7 +65,7 @@ public static class HtmlBatchReporter
         }
 
         sb.Append("<div style=\"overflow-x:auto\"><table class=\"list\"><thead><tr>");
-        foreach (var header in new[] { "File", "Verdict", "Overall", "Encoding", "Spectral", "Technical", "Mastering", "Transcode", "Bitrate" })
+        foreach (var header in new[] { "File", "Verdict", "Overall", "Encoding", "Spectral", "Technical", "Mastering", "Transcode", "Bitrate", "Warnings" })
         {
             sb.Append($"<th>{HtmlSupport.Html(header)}</th>");
         }
@@ -85,6 +85,7 @@ public static class HtmlBatchReporter
             sb.Append($"<td>{a.MasteringQualityScore.ToString("F0", culture)}</td>");
             sb.Append($"<td>{t.Probability.ToString("F0", culture)}% ({t.Label})</td>");
             sb.Append($"<td>{track.Result.EncodingAnalysis.DeclaredBitrateKbps} kbps</td>");
+            sb.Append($"<td>{HtmlSupport.Html(string.Join("; ", track.Result.Warnings))}</td>");
             sb.Append("</tr>");
         }
 
