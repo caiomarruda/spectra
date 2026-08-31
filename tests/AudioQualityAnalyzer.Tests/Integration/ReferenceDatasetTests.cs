@@ -10,6 +10,7 @@ using AudioQualityAnalyzer.Audio.Decoding;
 using AudioQualityAnalyzer.Audio.Mp3;
 using AudioQualityAnalyzer.Core.Decoding;
 using AudioQualityAnalyzer.Core.Models;
+using AudioQualityAnalyzer.Tests.TestSupport;
 using Xunit;
 
 namespace AudioQualityAnalyzer.Tests.Integration;
@@ -119,7 +120,7 @@ public class ReferenceDatasetTests
 
     private static AudioAnalysisResult AnalyzeReferenceFile(string relativePath)
     {
-        var path = FindReferenceDatasetPath(relativePath);
+        var path = ReferenceDataset.FindPath(relativePath);
 
         var (fileInfo, formatInfo, encodingAnalysis) = Mp3MetadataReader.Read(path);
         IAudioDecoder decoder = new NLayerAudioDecoder();
@@ -151,23 +152,5 @@ public class ReferenceDatasetTests
             NoiseAnalysis = noise,
             OverallAssessment = overallAssessment,
         };
-    }
-
-    private static string FindReferenceDatasetPath(string relativePath)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null && !Directory.Exists(Path.Combine(dir, "reference")))
-        {
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-
-        if (dir is null)
-        {
-            throw new DirectoryNotFoundException(
-                "Could not locate the reference/ dataset directory by walking up from the test output directory. " +
-                "Run scripts/generate-reference-dataset.sh from the repo root first.");
-        }
-
-        return Path.Combine(dir, "reference", relativePath);
     }
 }

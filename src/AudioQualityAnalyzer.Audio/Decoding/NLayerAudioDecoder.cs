@@ -1,3 +1,4 @@
+using AudioQualityAnalyzer.Audio.Mp3;
 using AudioQualityAnalyzer.Core.Decoding;
 using NLayer;
 
@@ -14,7 +15,10 @@ public sealed class NLayerAudioDecoder : IAudioDecoder
 
     public DecodedAudio Decode(string path)
     {
-        using var stream = File.OpenRead(path);
+        var data = File.ReadAllBytes(path);
+        var audioStartOffset = FindAudioStartOffset(data);
+
+        using var stream = new MemoryStream(data, audioStartOffset, data.Length - audioStartOffset, writable: false);
         using var mpegFile = new MpegFile(stream);
 
         var channelCount = mpegFile.Channels;
@@ -49,5 +53,20 @@ public sealed class NLayerAudioDecoder : IAudioDecoder
             DecoderVersion = typeof(MpegFile).Assembly.GetName().Version?.ToString(),
             SourceSampleRateHz = sampleRateHz,
         };
+    }
+
+    /// <summary>
+    /// NLayer's own frame scanner has no false-sync resync check and can throw (a bug in its
+    /// Layer II CRC path — real MP3s are Layer III, but an unusual leading tag, such as a second
+    /// ID3v2 tag or embedded artwork, can contain bytes that coincidentally look like a Layer II
+    /// sync) if handed the raw file including leading metadata. Mp3FrameParser's own resync logic
+    /// (requires two consecutive frames to parse before accepting a sync candidate) reliably finds
+    /// the true first audio frame for the encoding-metadata pass, so reuse it here and hand NLayer
+    /// a stream that already starts at real audio data instead of the whole file.
+    /// </summary>
+    private static int FindAudioStartOffset(byte[] data)
+    {
+        var parseResult = Mp3FrameParser.Parse(data);
+        return parseResult.AudioStartOffset >= 0 ? (int)parseResult.AudioStartOffset : 0;
     }
 }

@@ -2,6 +2,7 @@
 bin/
 obj/
 *.user
+publish/
 
 ## Generated analysis reports (reproducible from the CLI, not source)
 *.analysis.html
@@ -13,6 +14,9 @@ obj/
 
 ## OS
 .DS_Store
+
+## Claude Code local session state
+.claude/
 
 ## IDE
 .vs/
