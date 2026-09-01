@@ -88,10 +88,13 @@ dotnet publish src/Spectra.Cli -c Release -o publish
 
 ## Usage
 
-At least one export format (`--html`, `--sheet`, or `--json`) is required — without one, nothing from the analysis is kept anywhere once the console output scrolls away.
+Single-file mode always prints the full report to the console, so an export format is optional there. `--folder` mode has no per-track console output, so at least one export format (`--html`, `--sheet`, or `--json`) is required for it — without one, nothing from the scan is kept anywhere once the console output scrolls away.
 
 ```bash
-# Single file
+# Single file — console report only, no files written
+Spectra path/to/track.mp3
+
+# Single file — also export a report
 Spectra path/to/track.mp3 --json
 Spectra --input path/to/track.flac --html --sheet
 
@@ -99,7 +102,7 @@ Spectra --input path/to/track.flac --html --sheet
 Spectra --folder path/to/album --json
 Spectra --folder path/to/library --json --threads 4
 
-# Show every measured metric, not just the summary
+# Show every measured metric, not just the summary (single file only)
 Spectra path/to/track.wav --json --verbose
 ```
 
@@ -119,7 +122,7 @@ dotnet run --project src/Spectra.Cli -- path/to/track.mp3 --json
 | `--html` | Export an HTML report (`OriginalName.analysis.html`, or `<FolderName>.batch-analysis.html` in `--folder` mode) |
 | `--sheet` | Export an Excel report (`.analysis.xlsx` / `.batch-analysis.xlsx`) |
 | `--json` | Export the raw analysis data (`.analysis.json` / `.batch-analysis.json`) |
-| `--verbose` | Show every measured metric, not just the summary (single file: always; `--folder`: adds per-track detail too) |
+| `--verbose` | Show every measured metric, not just the summary (single file only — files are analyzed concurrently in `--folder` mode, so it's rejected there) |
 
 A failed export is reported but never aborts the analysis or the other exports:
 

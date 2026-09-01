@@ -88,13 +88,12 @@ public class CliOptionsTests
     [Fact]
     public void Parse_FolderWithExportFlags_AreRecognized()
     {
-        var options = CliOptions.Parse(["--folder", "/some/dir", "--html", "--sheet", "--json", "--verbose"]);
+        var options = CliOptions.Parse(["--folder", "/some/dir", "--html", "--sheet", "--json"]);
 
         Assert.NotNull(options);
         Assert.True(options!.Html);
         Assert.True(options.Sheet);
         Assert.True(options.Json);
-        Assert.True(options.Verbose);
     }
 
     [Fact]
@@ -134,21 +133,37 @@ public class CliOptionsTests
         Assert.Null(options);
     }
 
-    [Theory]
-    [InlineData("song.mp3")]
-    [InlineData("--input", "song.mp3")]
-    [InlineData("--folder", "/some/dir")]
-    public void Parse_NoExportFlag_ReturnsNull(params string[] args)
+    [Fact]
+    public void Parse_FolderNoExportFlag_ReturnsNull()
     {
-        var options = CliOptions.Parse(args);
+        var options = CliOptions.Parse(["--folder", "/some/dir"]);
 
         Assert.Null(options);
     }
 
+    [Theory]
+    [InlineData("song.mp3")]
+    [InlineData("--input", "song.mp3")]
+    public void Parse_SingleFileNoExportFlag_IsAllowed(params string[] args)
+    {
+        var options = CliOptions.Parse(args);
+
+        Assert.NotNull(options);
+    }
+
     [Fact]
-    public void Parse_VerboseOnlyNoExportFlag_ReturnsNull()
+    public void Parse_SingleFileVerboseNoExportFlag_IsAllowed()
     {
         var options = CliOptions.Parse(["song.mp3", "--verbose"]);
+
+        Assert.NotNull(options);
+        Assert.True(options!.Verbose);
+    }
+
+    [Fact]
+    public void Parse_FolderWithVerbose_ReturnsNull()
+    {
+        var options = CliOptions.Parse(["--folder", "/some/dir", "--json", "--verbose"]);
 
         Assert.Null(options);
     }

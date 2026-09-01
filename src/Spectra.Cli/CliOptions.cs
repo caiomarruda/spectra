@@ -84,13 +84,23 @@ public sealed record CliOptions
             return null;
         }
 
-        if (!html && !sheet && !json)
+        if (folderPath is not null)
         {
-            // A run with no export flag would analyze the file and produce nothing anyone can
-            // look at afterward — the console report scrolls away, and in --folder mode there is
-            // no per-track output at all without one of these. Require the caller to say what
-            // they want kept.
-            return null;
+            if (!html && !sheet && !json)
+            {
+                // --folder mode has no per-track console output at all without one of these —
+                // without an export, a scan would produce nothing anyone can look at afterward.
+                // Require the caller to say what they want kept.
+                return null;
+            }
+
+            if (verbose)
+            {
+                // Per-track verbose detail is written from multiple threads at once in --folder
+                // mode, so it interleaves into unreadable console output. Single-file mode has no
+                // such issue and always shows the full report, verbose or not.
+                return null;
+            }
         }
 
         return new CliOptions { InputPath = inputPath, FolderPath = folderPath, Threads = threads, Html = html, Sheet = sheet, Json = json, Verbose = verbose };

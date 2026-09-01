@@ -283,14 +283,16 @@ static void PrintUsage()
 {
     Console.WriteLine("""
         Usage:
-          Spectra <path-to-file> --html|--sheet|--json
-          Spectra --input <path-to-file> --html|--sheet|--json
+          Spectra <path-to-file> [--html|--sheet|--json] [--verbose]
+          Spectra --input <path-to-file> [--html|--sheet|--json] [--verbose]
           Spectra --folder <path-to-folder> --html|--sheet|--json
 
         Supported formats: .mp3, .wav, .flac, .aiff, .aif
 
-        At least one of --html, --sheet, or --json is required — without one, nothing from the
-        analysis is kept anywhere once the console output scrolls away.
+        Single-file mode always prints the full report to the console, so --html/--sheet/--json
+        are optional there. --folder mode has no per-track console output, so at least one of
+        --html, --sheet, or --json is required — without one, nothing from the scan is kept
+        anywhere once the console output scrolls away.
 
         Options:
           --folder    Recursively analyze every supported audio file under this folder (subfolders included)
@@ -300,7 +302,8 @@ static void PrintUsage()
                         --folder:    <FolderName>.batch-analysis.html in the scanned folder's root
           --sheet     Export Excel report (.analysis.xlsx / .batch-analysis.xlsx, same rule as --html)
           --json      Export raw JSON data (.analysis.json / .batch-analysis.json, same rule as --html)
-          --verbose   Show all measured metrics (single file: always; --folder: per-track detail too)
+          --verbose   Show all measured metrics (single file only — files are analyzed concurrently
+                        in --folder mode, so per-track verbose output would interleave illegibly)
 
         The input file is only ever read, never modified — no audio data or tags are changed.
         """);
