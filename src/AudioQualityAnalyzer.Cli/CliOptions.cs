@@ -79,8 +79,20 @@ public sealed record CliOptions
             return null; // Mutually exclusive: a single file or a folder scan, not both.
         }
 
-        return inputPath is null && folderPath is null
-            ? null
-            : new CliOptions { InputPath = inputPath, FolderPath = folderPath, Threads = threads, Html = html, Excel = excel, Json = json, Verbose = verbose };
+        if (inputPath is null && folderPath is null)
+        {
+            return null;
+        }
+
+        if (!html && !excel && !json)
+        {
+            // A run with no export flag would analyze the file and produce nothing anyone can
+            // look at afterward — the console report scrolls away, and in --folder mode there is
+            // no per-track output at all without one of these. Require the caller to say what
+            // they want kept.
+            return null;
+        }
+
+        return new CliOptions { InputPath = inputPath, FolderPath = folderPath, Threads = threads, Html = html, Excel = excel, Json = json, Verbose = verbose };
     }
 }
