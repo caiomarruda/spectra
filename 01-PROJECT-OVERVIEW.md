@@ -1,4 +1,4 @@
-# Audio Quality Analyzer
+# Spectra
 
 ## Objetivo
 
@@ -57,18 +57,18 @@ Quando não houver evidência suficiente, usar conclusões como `Possible transc
 Entrada:
 
 ```bash
-AudioQualityAnalyzer "/path/to/music.mp3"
-AudioQualityAnalyzer --input "/path/to/music.mp3"
+Spectra "/path/to/music.mp3"
+Spectra --input "/path/to/music.mp3"
 ```
 
 Exportação:
 
 ```bash
-AudioQualityAnalyzer "/path/to/music.mp3" --html
-AudioQualityAnalyzer "/path/to/music.mp3" --excel
-AudioQualityAnalyzer "/path/to/music.mp3" --html --excel
-AudioQualityAnalyzer "/path/to/music.mp3" --json
-AudioQualityAnalyzer "/path/to/music.mp3" --verbose
+Spectra "/path/to/music.mp3" --html
+Spectra "/path/to/music.mp3" --excel
+Spectra "/path/to/music.mp3" --html --excel
+Spectra "/path/to/music.mp3" --json
+Spectra "/path/to/music.mp3" --verbose
 ```
 
 ## Não implementar inicialmente
@@ -85,7 +85,7 @@ AudioQualityAnalyzer "/path/to/music.mp3" --verbose
 ## Arquitetura
 
 ```text
-AudioQualityAnalyzer
+Spectra
 ├── CLI
 ├── Application
 ├── Audio

@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="NLayer" Version="3.0.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Spectra.Core\Spectra.Core.csproj" />
+    <ProjectReference Include="..\..\src\Spectra.Audio\Spectra.Audio.csproj" />
+    <ProjectReference Include="..\..\src\Spectra.Analysis\Spectra.Analysis.csproj" />
+    <ProjectReference Include="..\..\src\Spectra.Reporting\Spectra.Reporting.csproj" />
+    <ProjectReference Include="..\..\src\Spectra.Cli\Spectra.Cli.csproj" />
+  </ItemGroup>
+
+</Project>

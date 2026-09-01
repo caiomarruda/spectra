@@ -151,8 +151,8 @@ Isso é uma resposta válida.
 
 Implementar:
 ```bash
-AudioQualityAnalyzer file.mp3 --verbose
-AudioQualityAnalyzer file.mp3 --json
+Spectra file.mp3 --verbose
+Spectra file.mp3 --json
 ```
 
 `--verbose` mostra todas as métricas usadas.

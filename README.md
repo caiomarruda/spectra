@@ -1,11 +1,13 @@
-# Audio Quality Analyzer
+# Spectra
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A read-only command-line tool that inspects an audio file's *technical* quality — bitrate, spectral content, loudness, dynamics, clipping, stereo image, and evidence of a prior lossy encode — and explains exactly what it measured, not just a score.
 
 ```
-$ AudioQualityAnalyzer track.mp3 --json
+$ Spectra track.mp3 --json
 
-=== Audio Quality Analyzer ===
+=== Spectra ===
 
 File:       track.mp3
 Duration:   00:03:47.32
@@ -75,13 +77,13 @@ Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 ```bash
 git clone <this-repo-url>
 cd spectra-v2
-dotnet build AudioQualityAnalyzer.slnx
+dotnet build Spectra.slnx
 ```
 
 Or publish a self-contained binary:
 
 ```bash
-dotnet publish src/AudioQualityAnalyzer.Cli -c Release -o publish
+dotnet publish src/Spectra.Cli -c Release -o publish
 ```
 
 ## Usage
@@ -90,21 +92,21 @@ At least one export format (`--html`, `--excel`, or `--json`) is required — wi
 
 ```bash
 # Single file
-AudioQualityAnalyzer path/to/track.mp3 --json
-AudioQualityAnalyzer --input path/to/track.flac --html --excel
+Spectra path/to/track.mp3 --json
+Spectra --input path/to/track.flac --html --excel
 
 # Batch: recursively analyze every supported file under a folder
-AudioQualityAnalyzer --folder path/to/album --json
-AudioQualityAnalyzer --folder path/to/library --json --threads 4
+Spectra --folder path/to/album --json
+Spectra --folder path/to/library --json --threads 4
 
 # Show every measured metric, not just the summary
-AudioQualityAnalyzer path/to/track.wav --json --verbose
+Spectra path/to/track.wav --json --verbose
 ```
 
 Running from source without a published binary:
 
 ```bash
-dotnet run --project src/AudioQualityAnalyzer.Cli -- path/to/track.mp3 --json
+dotnet run --project src/Spectra.Cli -- path/to/track.mp3 --json
 ```
 
 ### Options
@@ -130,7 +132,7 @@ Reason: File is currently open by another process.
 ## Architecture
 
 ```
-AudioQualityAnalyzer
+Spectra
 ├── Cli            — argument parsing, format dispatch, orchestration
 ├── Core            — shared models (AudioAnalysisResult and friends), IAudioDecoder abstraction
 ├── Audio

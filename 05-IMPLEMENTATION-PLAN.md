@@ -9,12 +9,12 @@ Implementar em etapas pequenas. Cada fase deve resultar em uma aplicação execu
 Criar solução .NET 10:
 
 ```text
-AudioQualityAnalyzer.Cli
-AudioQualityAnalyzer.Core
-AudioQualityAnalyzer.Audio
-AudioQualityAnalyzer.Analysis
-AudioQualityAnalyzer.Reporting
-AudioQualityAnalyzer.Tests
+Spectra.Cli
+Spectra.Core
+Spectra.Audio
+Spectra.Analysis
+Spectra.Reporting
+Spectra.Tests
 ```
 
 Configurar:
@@ -26,7 +26,7 @@ Configurar:
 - DI quando fizer sentido.
 
 Primeiro comando:
-`AudioQualityAnalyzer file.mp3`
+`Spectra file.mp3`
 
 ## Phase 2 — MP3 Metadata
 
@@ -221,12 +221,12 @@ Evitar expectativas excessivamente rígidas; validar faixas razoáveis.
 Suportar:
 
 ```bash
-AudioQualityAnalyzer "song.mp3"
-AudioQualityAnalyzer "song.mp3" --html
-AudioQualityAnalyzer "song.mp3" --excel
-AudioQualityAnalyzer "song.mp3" --html --excel
-AudioQualityAnalyzer "song.mp3" --verbose
-AudioQualityAnalyzer "song.mp3" --json
+Spectra "song.mp3"
+Spectra "song.mp3" --html
+Spectra "song.mp3" --excel
+Spectra "song.mp3" --html --excel
+Spectra "song.mp3" --verbose
+Spectra "song.mp3" --json
 ```
 
 ## Critical Development Rule

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Spectra.Core\Spectra.Core.csproj" />
+    <ProjectReference Include="..\Spectra.Audio\Spectra.Audio.csproj" />
+    <ProjectReference Include="..\Spectra.Analysis\Spectra.Analysis.csproj" />
+    <ProjectReference Include="..\Spectra.Reporting\Spectra.Reporting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Spectra</AssemblyName>
+  </PropertyGroup>
+
+</Project>
