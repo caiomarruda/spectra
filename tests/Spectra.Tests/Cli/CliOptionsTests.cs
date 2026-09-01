@@ -26,11 +26,11 @@ public class CliOptionsTests
     [Fact]
     public void Parse_AllExportFlags_AreRecognized()
     {
-        var options = CliOptions.Parse(["song.mp3", "--html", "--excel", "--json", "--verbose"]);
+        var options = CliOptions.Parse(["song.mp3", "--html", "--sheet", "--json", "--verbose"]);
 
         Assert.NotNull(options);
         Assert.True(options!.Html);
-        Assert.True(options.Excel);
+        Assert.True(options.Sheet);
         Assert.True(options.Json);
         Assert.True(options.Verbose);
     }
@@ -88,11 +88,11 @@ public class CliOptionsTests
     [Fact]
     public void Parse_FolderWithExportFlags_AreRecognized()
     {
-        var options = CliOptions.Parse(["--folder", "/some/dir", "--html", "--excel", "--json", "--verbose"]);
+        var options = CliOptions.Parse(["--folder", "/some/dir", "--html", "--sheet", "--json", "--verbose"]);
 
         Assert.NotNull(options);
         Assert.True(options!.Html);
-        Assert.True(options.Excel);
+        Assert.True(options.Sheet);
         Assert.True(options.Json);
         Assert.True(options.Verbose);
     }

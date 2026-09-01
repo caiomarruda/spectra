@@ -223,8 +223,8 @@ Suportar:
 ```bash
 Spectra "song.mp3"
 Spectra "song.mp3" --html
-Spectra "song.mp3" --excel
-Spectra "song.mp3" --html --excel
+Spectra "song.mp3" --sheet
+Spectra "song.mp3" --html --sheet
 Spectra "song.mp3" --verbose
 Spectra "song.mp3" --json
 ```

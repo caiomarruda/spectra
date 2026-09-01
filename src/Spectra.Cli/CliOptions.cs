@@ -12,7 +12,7 @@ public sealed record CliOptions
     public int? Threads { get; init; }
 
     public bool Html { get; init; }
-    public bool Excel { get; init; }
+    public bool Sheet { get; init; }
     public bool Json { get; init; }
     public bool Verbose { get; init; }
 
@@ -22,7 +22,7 @@ public sealed record CliOptions
         string? folderPath = null;
         int? threads = null;
         var html = false;
-        var excel = false;
+        var sheet = false;
         var json = false;
         var verbose = false;
 
@@ -55,8 +55,8 @@ public sealed record CliOptions
                 case "--html":
                     html = true;
                     break;
-                case "--excel":
-                    excel = true;
+                case "--sheet":
+                    sheet = true;
                     break;
                 case "--json":
                     json = true;
@@ -84,7 +84,7 @@ public sealed record CliOptions
             return null;
         }
 
-        if (!html && !excel && !json)
+        if (!html && !sheet && !json)
         {
             // A run with no export flag would analyze the file and produce nothing anyone can
             // look at afterward — the console report scrolls away, and in --folder mode there is
@@ -93,6 +93,6 @@ public sealed record CliOptions
             return null;
         }
 
-        return new CliOptions { InputPath = inputPath, FolderPath = folderPath, Threads = threads, Html = html, Excel = excel, Json = json, Verbose = verbose };
+        return new CliOptions { InputPath = inputPath, FolderPath = folderPath, Threads = threads, Html = html, Sheet = sheet, Json = json, Verbose = verbose };
     }
 }

@@ -77,7 +77,7 @@ static int RunSingleFileMode(CliOptions options, ILogger logger, JsonSerializerO
         {
             TryExport("JSON", () => File.WriteAllText(BuildExportPath(inputPath, "json"), JsonSerializer.Serialize(result, jsonOptions)));
         }
-        if (options.Excel)
+        if (options.Sheet)
         {
             TryExport("Excel", () => ExcelReporter.WriteToFile(result, BuildExportPath(inputPath, "xlsx")));
         }
@@ -175,7 +175,7 @@ static int RunFolderMode(CliOptions options, ILogger logger, JsonSerializerOptio
             Path.Combine(folderPath, $"{folderName}.batch-analysis.json"),
             JsonSerializer.Serialize(new { Successes = successes, Failures = failures }, jsonOptions)));
     }
-    if (options.Excel)
+    if (options.Sheet)
     {
         TryExport("Excel", () => ExcelReporter.WriteBatchToFile(successes, failures, Path.Combine(folderPath, $"{folderName}.batch-analysis.xlsx")));
     }
@@ -283,13 +283,13 @@ static void PrintUsage()
 {
     Console.WriteLine("""
         Usage:
-          Spectra <path-to-file> --html|--excel|--json
-          Spectra --input <path-to-file> --html|--excel|--json
-          Spectra --folder <path-to-folder> --html|--excel|--json
+          Spectra <path-to-file> --html|--sheet|--json
+          Spectra --input <path-to-file> --html|--sheet|--json
+          Spectra --folder <path-to-folder> --html|--sheet|--json
 
         Supported formats: .mp3, .wav, .flac, .aiff, .aif
 
-        At least one of --html, --excel, or --json is required — without one, nothing from the
+        At least one of --html, --sheet, or --json is required — without one, nothing from the
         analysis is kept anywhere once the console output scrolls away.
 
         Options:
@@ -298,7 +298,7 @@ static void PrintUsage()
           --html      Export HTML report
                         single file: OriginalName.analysis.html
                         --folder:    <FolderName>.batch-analysis.html in the scanned folder's root
-          --excel     Export Excel report (.analysis.xlsx / .batch-analysis.xlsx, same rule as --html)
+          --sheet     Export Excel report (.analysis.xlsx / .batch-analysis.xlsx, same rule as --html)
           --json      Export raw JSON data (.analysis.json / .batch-analysis.json, same rule as --html)
           --verbose   Show all measured metrics (single file: always; --folder: per-track detail too)
 

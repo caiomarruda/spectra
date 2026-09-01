@@ -44,7 +44,7 @@ No single metric decides the verdict, and nothing is stated as certain. A findin
 
 ## Read-only, always
 
-The analyzer only ever *reads* the input file. It never writes to it, renames it, touches its tags, or modifies it in any way — decoding happens entirely in memory from bytes read with read-only file access. The only files it ever creates are the report files you explicitly ask for (`--html`, `--excel`, `--json`), written next to the input, never over it.
+The analyzer only ever *reads* the input file. It never writes to it, renames it, touches its tags, or modifies it in any way — decoding happens entirely in memory from bytes read with read-only file access. The only files it ever creates are the report files you explicitly ask for (`--html`, `--sheet`, `--json`), written next to the input, never over it.
 
 ## Supported formats
 
@@ -88,12 +88,12 @@ dotnet publish src/Spectra.Cli -c Release -o publish
 
 ## Usage
 
-At least one export format (`--html`, `--excel`, or `--json`) is required — without one, nothing from the analysis is kept anywhere once the console output scrolls away.
+At least one export format (`--html`, `--sheet`, or `--json`) is required — without one, nothing from the analysis is kept anywhere once the console output scrolls away.
 
 ```bash
 # Single file
 Spectra path/to/track.mp3 --json
-Spectra --input path/to/track.flac --html --excel
+Spectra --input path/to/track.flac --html --sheet
 
 # Batch: recursively analyze every supported file under a folder
 Spectra --folder path/to/album --json
@@ -117,7 +117,7 @@ dotnet run --project src/Spectra.Cli -- path/to/track.mp3 --json
 | `--folder <path>` | Recursively analyze every supported file under this folder |
 | `--threads <n>` | Parallel files to analyze at once in `--folder` mode (default: all CPU cores) |
 | `--html` | Export an HTML report (`OriginalName.analysis.html`, or `<FolderName>.batch-analysis.html` in `--folder` mode) |
-| `--excel` | Export an Excel report (`.analysis.xlsx` / `.batch-analysis.xlsx`) |
+| `--sheet` | Export an Excel report (`.analysis.xlsx` / `.batch-analysis.xlsx`) |
 | `--json` | Export the raw analysis data (`.analysis.json` / `.batch-analysis.json`) |
 | `--verbose` | Show every measured metric, not just the summary (single file: always; `--folder`: adds per-track detail too) |
 

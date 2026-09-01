@@ -65,8 +65,8 @@ Exportação:
 
 ```bash
 Spectra "/path/to/music.mp3" --html
-Spectra "/path/to/music.mp3" --excel
-Spectra "/path/to/music.mp3" --html --excel
+Spectra "/path/to/music.mp3" --sheet
+Spectra "/path/to/music.mp3" --html --sheet
 Spectra "/path/to/music.mp3" --json
 Spectra "/path/to/music.mp3" --verbose
 ```
