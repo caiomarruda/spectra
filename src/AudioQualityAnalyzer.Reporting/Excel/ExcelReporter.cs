@@ -160,11 +160,18 @@ public static class ExcelReporter
         row = WriteText(ws, row, "Extension", result.FileInfo.Extension);
         row = WriteNumber(ws, row, "Size (bytes)", result.FileInfo.SizeInBytes);
         row = WriteText(ws, row, "Duration", result.FileInfo.Duration.ToString(@"hh\:mm\:ss\.ff"));
-        row = WriteText(ws, row, "MPEG Version", result.FormatInfo.MpegVersion.ToString());
-        row = WriteText(ws, row, "MPEG Layer", result.FormatInfo.MpegLayer.ToString());
+        if (result.FormatInfo.Format == "MP3")
+        {
+            row = WriteText(ws, row, "MPEG Version", result.FormatInfo.MpegVersion.ToString());
+            row = WriteText(ws, row, "MPEG Layer", result.FormatInfo.MpegLayer.ToString());
+        }
         row = WriteNumber(ws, row, "Sample Rate (Hz)", result.FormatInfo.SampleRateHz);
         row = WriteNumber(ws, row, "Channels", result.FormatInfo.Channels);
         row = WriteText(ws, row, "Channel Mode", result.FormatInfo.ChannelMode.ToString());
+        if (result.FormatInfo.BitsPerSample is { } bitsPerSample)
+        {
+            row = WriteNumber(ws, row, "Bit Depth", bitsPerSample);
+        }
         row = WriteText(ws, row, "Encoder", result.FormatInfo.Encoder ?? "unknown");
         if (result.FormatInfo.EncoderDelaySamples is { } delay)
         {
@@ -187,8 +194,11 @@ public static class ExcelReporter
         row = WriteNumber(ws, row, "Maximum Bitrate (kbps)", e.MaximumBitrateKbps);
         row = WriteText(ws, row, "Bitrate Mode", e.BitrateMode.ToString());
         row = WriteNumber(ws, row, "Frame Count", e.FrameCount);
-        row = WriteText(ws, row, "Has Xing Header", e.HasXingHeader.ToString());
-        WriteText(ws, row, "Has LAME Tag", e.HasLameTag.ToString());
+        if (result.FormatInfo.Format == "MP3")
+        {
+            row = WriteText(ws, row, "Has Xing Header", e.HasXingHeader.ToString());
+            WriteText(ws, row, "Has LAME Tag", e.HasLameTag.ToString());
+        }
         ws.Columns().AdjustToContents();
     }
 

@@ -48,9 +48,16 @@ public static class ConsoleReporter
         writer.WriteLine();
 
         writer.WriteLine("-- Format --");
-        writer.WriteLine($"Format:         {result.FormatInfo.Format} ({DescribeMpeg(result.FormatInfo.MpegVersion, result.FormatInfo.MpegLayer)})");
+        var formatLabel = result.FormatInfo.Format == "MP3"
+            ? $"{result.FormatInfo.Format} ({DescribeMpeg(result.FormatInfo.MpegVersion, result.FormatInfo.MpegLayer)})"
+            : result.FormatInfo.Format;
+        writer.WriteLine($"Format:         {formatLabel}");
         writer.WriteLine($"Sample Rate:    {result.FormatInfo.SampleRateHz} Hz");
         writer.WriteLine($"Channels:       {result.FormatInfo.Channels} ({result.FormatInfo.ChannelMode})");
+        if (result.FormatInfo.BitsPerSample is { } bitsPerSample)
+        {
+            writer.WriteLine($"Bit Depth:      {bitsPerSample}-bit");
+        }
         if (result.FormatInfo.Encoder is not null)
         {
             writer.WriteLine($"Encoder:        {result.FormatInfo.Encoder}");
@@ -62,7 +69,7 @@ public static class ConsoleReporter
         writer.WriteLine($"Average Bitrate:    {result.EncodingAnalysis.AverageBitrateKbps.ToString("F1", culture)} kbps (measured)");
         writer.WriteLine($"Bitrate Range:      {result.EncodingAnalysis.MinimumBitrateKbps}-{result.EncodingAnalysis.MaximumBitrateKbps} kbps");
         writer.WriteLine($"Bitrate Mode:       {result.EncodingAnalysis.BitrateMode}");
-        if (verbose)
+        if (verbose && result.FormatInfo.Format == "MP3")
         {
             writer.WriteLine($"Frame Count:        {result.EncodingAnalysis.FrameCount}");
             writer.WriteLine($"Has Xing Header:    {result.EncodingAnalysis.HasXingHeader}");

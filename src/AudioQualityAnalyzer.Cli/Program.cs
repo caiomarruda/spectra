@@ -11,8 +11,11 @@ using AudioQualityAnalyzer.Analysis.Spectral;
 using AudioQualityAnalyzer.Analysis.Stereo;
 using AudioQualityAnalyzer.Analysis.Transcoding;
 using AudioQualityAnalyzer.Analysis.Waveform;
+using AudioQualityAnalyzer.Audio.Aiff;
 using AudioQualityAnalyzer.Audio.Decoding;
+using AudioQualityAnalyzer.Audio.Flac;
 using AudioQualityAnalyzer.Audio.Mp3;
+using AudioQualityAnalyzer.Audio.Wav;
 using AudioQualityAnalyzer.Cli;
 using AudioQualityAnalyzer.Core.Decoding;
 using AudioQualityAnalyzer.Core.Models;
@@ -55,9 +58,9 @@ static int RunSingleFileMode(CliOptions options, ILogger logger, JsonSerializerO
         return 1;
     }
 
-    if (!string.Equals(Path.GetExtension(inputPath), ".mp3", StringComparison.OrdinalIgnoreCase))
+    if (!IsSupportedExtension(inputPath))
     {
-        logger.LogError("Only MP3 files are supported in this version.");
+        logger.LogError("Unsupported file type '{Extension}'. Supported formats: {Supported}.", Path.GetExtension(inputPath), string.Join(", ", SupportedExtensions()));
         return 1;
     }
 
@@ -98,18 +101,19 @@ static int RunFolderMode(CliOptions options, ILogger logger, JsonSerializerOptio
         return 1;
     }
 
-    var mp3Files = Directory.EnumerateFiles(folderPath, "*.mp3", SearchOption.AllDirectories)
+    var audioFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)
+        .Where(IsSupportedExtension)
         .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
         .ToList();
 
-    if (mp3Files.Count == 0)
+    if (audioFiles.Count == 0)
     {
-        Console.WriteLine("No .mp3 files found under " + folderPath);
+        Console.WriteLine($"No supported audio files ({string.Join(", ", SupportedExtensions())}) found under " + folderPath);
         return 0;
     }
 
     var threadCount = options.Threads ?? Environment.ProcessorCount;
-    Console.WriteLine($"Found {mp3Files.Count} MP3 file(s) under {folderPath} — analyzing with {threadCount} thread(s)");
+    Console.WriteLine($"Found {audioFiles.Count} audio file(s) under {folderPath} — analyzing with {threadCount} thread(s)");
     Console.WriteLine();
 
     // Each file's analysis is independent (no shared mutable state across analyzers — every
@@ -118,13 +122,13 @@ static int RunFolderMode(CliOptions options, ILogger logger, JsonSerializerOptio
     // pre-sized, index-addressed array (one slot per thread, no contention) so the final
     // successes/failures lists stay in the original file-discovery order regardless of which
     // thread finished which file first — deterministic reports, non-deterministic scheduling.
-    var slots = new (BatchTrackResult? Success, BatchTrackFailure? Failure)[mp3Files.Count];
+    var slots = new (BatchTrackResult? Success, BatchTrackFailure? Failure)[audioFiles.Count];
     var completedCount = 0;
     var consoleLock = new object();
 
-    Parallel.For(0, mp3Files.Count, new ParallelOptions { MaxDegreeOfParallelism = threadCount }, i =>
+    Parallel.For(0, audioFiles.Count, new ParallelOptions { MaxDegreeOfParallelism = threadCount }, i =>
     {
-        var path = mp3Files[i];
+        var path = audioFiles[i];
         var relativePath = Path.GetRelativePath(folderPath, path);
 
         string statusLine;
@@ -144,7 +148,7 @@ static int RunFolderMode(CliOptions options, ILogger logger, JsonSerializerOptio
         var completed = Interlocked.Increment(ref completedCount);
         lock (consoleLock)
         {
-            Console.WriteLine($"[{completed}/{mp3Files.Count}] {relativePath} ... {statusLine}");
+            Console.WriteLine($"[{completed}/{audioFiles.Count}] {relativePath} ... {statusLine}");
             if (options.Verbose && result is not null)
             {
                 ConsoleReporter.Report(result, verbose: true, Console.Out);
@@ -157,7 +161,7 @@ static int RunFolderMode(CliOptions options, ILogger logger, JsonSerializerOptio
     var failures = slots.Where(s => s.Failure is not null).Select(s => s.Failure!).ToList();
 
     Console.WriteLine();
-    Console.WriteLine($"Analyzed {successes.Count} of {mp3Files.Count} file(s)" + (failures.Count > 0 ? $", {failures.Count} failed." : "."));
+    Console.WriteLine($"Analyzed {successes.Count} of {audioFiles.Count} file(s)" + (failures.Count > 0 ? $", {failures.Count} failed." : "."));
 
     // One consolidated file per format in the scanned folder's root, not one per track/subfolder.
     var folderName = new DirectoryInfo(folderPath).Name;
@@ -179,11 +183,15 @@ static int RunFolderMode(CliOptions options, ILogger logger, JsonSerializerOptio
     return successes.Count == 0 && failures.Count > 0 ? 1 : 0;
 }
 
+/// <summary>Extensions this analyzer can read, ordered as shown in usage/error text.</summary>
+static string[] SupportedExtensions() => [".mp3", ".wav", ".flac", ".aiff", ".aif"];
+
+static bool IsSupportedExtension(string path) =>
+    SupportedExtensions().Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
+
 static AudioAnalysisResult AnalyzeFile(string path)
 {
-    var (fileInfo, formatInfo, encodingAnalysis) = Mp3MetadataReader.Read(path);
-
-    IAudioDecoder decoder = new NLayerAudioDecoder();
+    var (fileInfo, formatInfo, encodingAnalysis, decoder) = ReadMetadata(path);
     var decoded = decoder.Decode(path);
 
     var waveform = WaveformAnalyzer.Analyze(decoded);
@@ -221,6 +229,34 @@ static AudioAnalysisResult AnalyzeFile(string path)
     };
 }
 
+static (AudioFileInfo FileInfo, FormatInfo FormatInfo, EncodingAnalysis EncodingAnalysis, IAudioDecoder Decoder) ReadMetadata(string path)
+{
+    var extension = Path.GetExtension(path);
+
+    if (string.Equals(extension, ".mp3", StringComparison.OrdinalIgnoreCase))
+    {
+        var (fileInfo, formatInfo, encodingAnalysis) = Mp3MetadataReader.Read(path);
+        return (fileInfo, formatInfo, encodingAnalysis, new NLayerAudioDecoder());
+    }
+    if (string.Equals(extension, ".wav", StringComparison.OrdinalIgnoreCase))
+    {
+        var (fileInfo, formatInfo, encodingAnalysis) = WavMetadataReader.Read(path);
+        return (fileInfo, formatInfo, encodingAnalysis, new WavAudioDecoder());
+    }
+    if (string.Equals(extension, ".aiff", StringComparison.OrdinalIgnoreCase) || string.Equals(extension, ".aif", StringComparison.OrdinalIgnoreCase))
+    {
+        var (fileInfo, formatInfo, encodingAnalysis) = AiffMetadataReader.Read(path);
+        return (fileInfo, formatInfo, encodingAnalysis, new AiffAudioDecoder());
+    }
+    if (string.Equals(extension, ".flac", StringComparison.OrdinalIgnoreCase))
+    {
+        var (fileInfo, formatInfo, encodingAnalysis) = FlacMetadataReader.Read(path);
+        return (fileInfo, formatInfo, encodingAnalysis, new FlacAudioDecoder());
+    }
+
+    throw new NotSupportedException($"Unsupported file extension '{extension}'. Supported formats: {string.Join(", ", SupportedExtensions())}.");
+}
+
 // A failed export must not be reported as an analysis failure (04-REPORTS.md "Export Errors").
 static void TryExport(string label, Action export)
 {
@@ -247,12 +283,17 @@ static void PrintUsage()
 {
     Console.WriteLine("""
         Usage:
-          AudioQualityAnalyzer <path-to.mp3>
-          AudioQualityAnalyzer --input <path-to.mp3>
-          AudioQualityAnalyzer --folder <path-to-folder>
+          AudioQualityAnalyzer <path-to-file> --html|--excel|--json
+          AudioQualityAnalyzer --input <path-to-file> --html|--excel|--json
+          AudioQualityAnalyzer --folder <path-to-folder> --html|--excel|--json
+
+        Supported formats: .mp3, .wav, .flac, .aiff, .aif
+
+        At least one of --html, --excel, or --json is required — without one, nothing from the
+        analysis is kept anywhere once the console output scrolls away.
 
         Options:
-          --folder    Recursively analyze every .mp3 under this folder (subfolders included)
+          --folder    Recursively analyze every supported audio file under this folder (subfolders included)
           --threads   Parallel files to analyze at once in --folder mode (default: all CPU cores)
           --html      Export HTML report
                         single file: OriginalName.analysis.html
@@ -260,5 +301,7 @@ static void PrintUsage()
           --excel     Export Excel report (.analysis.xlsx / .batch-analysis.xlsx, same rule as --html)
           --json      Export raw JSON data (.analysis.json / .batch-analysis.json, same rule as --html)
           --verbose   Show all measured metrics (single file: always; --folder: per-track detail too)
+
+        The input file is only ever read, never modified — no audio data or tags are changed.
         """);
 }

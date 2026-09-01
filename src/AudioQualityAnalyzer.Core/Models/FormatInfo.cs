@@ -13,4 +13,7 @@ public sealed record FormatInfo
     public string? Encoder { get; init; }
     public int? EncoderDelaySamples { get; init; }
     public int? PaddingSamples { get; init; }
+
+    /// <summary>Bits per PCM sample as stored in the file. Null for lossy formats (MP3), where the decoded output has no inherent bit depth.</summary>
+    public int? BitsPerSample { get; init; }
 }

@@ -104,9 +104,16 @@ public static class HtmlReporter
         AppendRow(sb, "Filename", result.FileInfo.FileName);
         AppendRow(sb, "Duration", result.FileInfo.Duration.ToString(@"hh\:mm\:ss\.ff"));
         AppendRow(sb, "Size", $"{result.FileInfo.SizeInBytes / 1024.0 / 1024.0:F2} MB");
-        AppendRow(sb, "Format", $"{result.FormatInfo.Format} (MPEG {DescribeVersion(result.FormatInfo.MpegVersion)} Layer {DescribeLayer(result.FormatInfo.MpegLayer)})");
+        var formatLabel = result.FormatInfo.Format == "MP3"
+            ? $"{result.FormatInfo.Format} (MPEG {DescribeVersion(result.FormatInfo.MpegVersion)} Layer {DescribeLayer(result.FormatInfo.MpegLayer)})"
+            : result.FormatInfo.Format;
+        AppendRow(sb, "Format", formatLabel);
         AppendRow(sb, "Sample Rate", $"{result.FormatInfo.SampleRateHz} Hz");
         AppendRow(sb, "Channels", $"{result.FormatInfo.Channels} ({result.FormatInfo.ChannelMode})");
+        if (result.FormatInfo.BitsPerSample is { } bitsPerSample)
+        {
+            AppendRow(sb, "Bit Depth", $"{bitsPerSample}-bit");
+        }
         if (result.FormatInfo.Encoder is not null)
         {
             AppendRow(sb, "Encoder", result.FormatInfo.Encoder);
