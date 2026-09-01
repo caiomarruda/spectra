@@ -76,7 +76,7 @@ Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
 git clone <this-repo-url>
-cd spectra-v2
+cd spectra
 dotnet build Spectra.slnx
 ```
 
