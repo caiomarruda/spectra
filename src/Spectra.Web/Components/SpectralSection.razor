@@ -1,0 +1,42 @@
+<section class="report-section">
+    <h2>Spectral Analysis</h2>
+    <div class="kv">
+        <div class="k">Effective Bandwidth</div><div class="v">@Format.Number(Spectral.EffectiveBandwidthHz / 1000.0, "F2") kHz (confidence: @Spectral.BandwidthConfidence)</div>
+        <div class="k">Cutoff Frequency</div><div class="v">@Format.Number(Spectral.CutoffFrequencyHz / 1000.0, "F2") kHz</div>
+        <div class="k">Cutoff Sharpness</div><div class="v">@Format.Number(Spectral.CutoffSharpnessDbPerOctave) dB/octave</div>
+        <div class="k">Cutoff Consistency</div><div class="v">@Format.Percent(Spectral.CutoffConsistency * 100)</div>
+        <div class="k">Spectral Centroid</div><div class="v">@Format.Number(Spectral.SpectralCentroidHz / 1000.0, "F2") kHz</div>
+        <div class="k">Spectral Rolloff (85%)</div><div class="v">@Format.Number(Spectral.SpectralRolloffHz / 1000.0, "F2") kHz</div>
+        <div class="k">Spectral Flatness</div><div class="v">@Format.Number(Spectral.SpectralFlatness, "F3")</div>
+        <div class="k">Spectral Flux (avg)</div><div class="v">@Format.Number(Spectral.SpectralFluxAverage, "F3")</div>
+        <div class="k">Spectral Contrast</div><div class="v">@Format.Number(Spectral.SpectralContrast, "F2")</div>
+    </div>
+
+    @if (Spectral.BandEnergies.Count > 0)
+    {
+        <h3>Band Energies</h3>
+        <div class="band-bars">
+            @foreach (var band in Spectral.BandEnergies)
+            {
+                <div class="band-bar" title="@band.Label: @Format.Db(band.AverageEnergyDb)">
+                    <div class="fill" style="height: @(BarHeightPercent(band.AverageEnergyDb))%"></div>
+                    <div class="label">@band.Label</div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public SpectralAnalysis Spectral { get; set; } = default!;
+
+    // Band energies are dB values, always <= 0; -100 dB (effective silence) maps to 0% bar
+    // height, 0 dB (full scale) maps to 100% — same floor HtmlReporter's band chart uses.
+    private static double BarHeightPercent(double energyDb)
+    {
+        const double floorDb = -100;
+        var clamped = Math.Clamp(energyDb, floorDb, 0);
+        return (clamped - floorDb) / -floorDb * 100;
+    }
+}

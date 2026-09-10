@@ -1,0 +1,49 @@
+<section class="report-section">
+    <h2>Stereo</h2>
+    @if (Stereo is null)
+    {
+        <p class="muted">Mono file — no stereo image to describe.</p>
+    }
+    else
+    {
+        <div class="kv">
+            <div class="k">Correlation</div><div class="v">@Format.Number(Stereo.CorrelationCoefficient, "F2")</div>
+            <div class="k">Balance</div><div class="v">@Format.Number(Stereo.ChannelBalanceDb, "+0.00;-0.00") dB</div>
+            <div class="k">Mono Compatibility</div><div class="v">@Format.Number(Stereo.MonoCompatibilityRatio, "F2")</div>
+            <div class="k">Mid / Side Energy</div><div class="v">@Format.Number(Stereo.MidEnergyDb) / @Format.Number(Stereo.SideEnergyDb) dB</div>
+            <div class="k">Side / Mid Ratio</div><div class="v">@Format.Db(Stereo.SideToMidRatioDb)</div>
+        </div>
+
+        @if (BuildFlags() is { Count: > 0 } flags)
+        {
+            <ul class="flags">
+                @foreach (var flag in flags)
+                {
+                    <li>@flag</li>
+                }
+            </ul>
+        }
+    }
+</section>
+
+@code {
+    [Parameter]
+    public StereoAnalysis? Stereo { get; set; }
+
+    private List<string> BuildFlags()
+    {
+        var flags = new List<string>();
+        if (Stereo is null)
+        {
+            return flags;
+        }
+
+        if (Stereo.IsChannelEffectivelyMissing) flags.Add("channel effectively missing");
+        if (Stereo.IsSeverelyImbalanced) flags.Add("severe imbalance");
+        if (Stereo.IsMonoDisguisedAsStereo) flags.Add("mono disguised as stereo");
+        if (Stereo.HasPhaseProblems) flags.Add("phase problems");
+        if (Stereo.HasPolarityInversion) flags.Add("polarity inversion");
+        if (Stereo.HasExcessiveSideContent) flags.Add("excessive side content");
+        return flags;
+    }
+}

@@ -13,10 +13,20 @@ public sealed class NLayerAudioDecoder : IAudioDecoder
 {
     private const int ReadChunkSizeInFrames = 4096;
 
-    public DecodedAudio Decode(string path)
+    public DecodedAudio Decode(string path) => Decode(File.ReadAllBytes(path), path);
+
+    public static DecodedAudio Decode(byte[] data, string fileName)
     {
-        var data = File.ReadAllBytes(path);
-        var audioStartOffset = FindAudioStartOffset(data);
+        // NLayer's own frame scanner has no false-sync resync check and can throw (a bug in its
+        // Layer II CRC path — real MP3s are Layer III, but an unusual leading tag, such as a
+        // second ID3v2 tag or embedded artwork, can contain bytes that coincidentally look like a
+        // Layer II sync) if handed the raw file including leading metadata. Mp3FrameParser's own
+        // resync logic (requires two consecutive frames to parse before accepting a sync
+        // candidate) reliably finds the true first audio frame, so reuse it here and hand NLayer
+        // a stream that already starts at real audio data instead of the whole file — its parsed
+        // frame list also gives an upfront sample-count estimate, used below.
+        var parseResult = Mp3FrameParser.Parse(data);
+        var audioStartOffset = parseResult.AudioStartOffset >= 0 ? (int)parseResult.AudioStartOffset : 0;
 
         using var stream = new MemoryStream(data, audioStartOffset, data.Length - audioStartOffset, writable: false);
         using var mpegFile = new MpegFile(stream);
@@ -24,10 +34,16 @@ public sealed class NLayerAudioDecoder : IAudioDecoder
         var channelCount = mpegFile.Channels;
         var sampleRateHz = mpegFile.SampleRate;
 
+        // Estimated from the frame headers already parsed above (sum of each frame's fixed
+        // sample count) so each channel list can pre-allocate its backing array once instead of
+        // growing — and repeatedly copying — it as NLayer decodes the file frame by frame. Only
+        // an estimate: a corrupted/truncated file can decode to fewer frames than the header scan
+        // found, but List<float> grows past this capacity automatically if it undershoots.
+        var estimatedSampleCount = parseResult.Frames.Sum(f => f.SamplesPerFrame);
         var channels = new List<float>[channelCount];
         for (var i = 0; i < channelCount; i++)
         {
-            channels[i] = [];
+            channels[i] = new List<float>(estimatedSampleCount);
         }
 
         var interleavedBuffer = new float[ReadChunkSizeInFrames * channelCount];
@@ -77,20 +93,5 @@ public sealed class NLayerAudioDecoder : IAudioDecoder
             SourceSampleRateHz = sampleRateHz,
             PartialDecodeReason = partialDecodeReason,
         };
-    }
-
-    /// <summary>
-    /// NLayer's own frame scanner has no false-sync resync check and can throw (a bug in its
-    /// Layer II CRC path — real MP3s are Layer III, but an unusual leading tag, such as a second
-    /// ID3v2 tag or embedded artwork, can contain bytes that coincidentally look like a Layer II
-    /// sync) if handed the raw file including leading metadata. Mp3FrameParser's own resync logic
-    /// (requires two consecutive frames to parse before accepting a sync candidate) reliably finds
-    /// the true first audio frame for the encoding-metadata pass, so reuse it here and hand NLayer
-    /// a stream that already starts at real audio data instead of the whole file.
-    /// </summary>
-    private static int FindAudioStartOffset(byte[] data)
-    {
-        var parseResult = Mp3FrameParser.Parse(data);
-        return parseResult.AudioStartOffset >= 0 ? (int)parseResult.AudioStartOffset : 0;
     }
 }

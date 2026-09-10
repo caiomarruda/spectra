@@ -1,0 +1,72 @@
+<div class="drop-zone @(_dragOver ? "drag-over" : "")"
+     @ondragenter="@(() => _dragOver = true)"
+     @ondragleave="@(() => _dragOver = false)"
+     @ondragover:preventDefault="true"
+     @ondrop="@(() => _dragOver = false)">
+    <InputFile OnChange="HandleFilesSelectedAsync" multiple accept=".mp3,.wav,.flac,.aiff,.aif" />
+    <div class="title">Drop your audio here</div>
+    <div class="hint">or click to browse</div>
+    <div class="formats">MP3 · WAV · FLAC · AIFF</div>
+</div>
+
+@if (_error is not null)
+{
+    <p class="field-error">@_error</p>
+}
+
+@code {
+    // Generous for a single track, while keeping in-tab float32 PCM + decode-buffer memory
+    // reasonable on mobile browsers (a WASM app's linear memory is not unlimited).
+    private const long MaxFileSizeBytes = 100 * 1024 * 1024;
+
+    [Parameter, EditorRequired]
+    public EventCallback<(byte[] Data, string FileName)> OnFileReady { get; set; }
+
+    private bool _dragOver;
+    private string? _error;
+
+    private async Task HandleFilesSelectedAsync(InputFileChangeEventArgs e)
+    {
+        _error = null;
+
+        if (e.FileCount == 0)
+        {
+            return;
+        }
+        if (e.FileCount > 1)
+        {
+            _error = "Please select only one audio file at a time.";
+            return;
+        }
+
+        var file = e.File;
+        var extension = Path.GetExtension(file.Name);
+        if (!AudioAnalysisService.SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            _error = $"Unsupported file type '{extension}'. Supported formats: {string.Join(", ", AudioAnalysisService.SupportedExtensions)}.";
+            return;
+        }
+
+        if (file.Size > MaxFileSizeBytes)
+        {
+            _error = $"This file is too large to analyze in the browser (limit: {MaxFileSizeBytes / 1024 / 1024} MB).";
+            return;
+        }
+
+        byte[] data;
+        try
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: MaxFileSizeBytes);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            data = memoryStream.ToArray();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Could not read '{file.Name}': {ex.Message}";
+            return;
+        }
+
+        await OnFileReady.InvokeAsync((data, file.Name));
+    }
+}

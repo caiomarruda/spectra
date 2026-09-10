@@ -7,13 +7,23 @@ public static class Mp3MetadataReader
 {
     public static (AudioFileInfo FileInfo, FormatInfo FormatInfo, EncodingAnalysis EncodingAnalysis) Read(string path)
     {
-        var data = File.ReadAllBytes(path);
+        var (fileInfo, formatInfo, encodingAnalysis) = Read(File.ReadAllBytes(path), path);
+        return (fileInfo with { FullPath = Path.GetFullPath(path) }, formatInfo, encodingAnalysis);
+    }
+
+    /// <summary>
+    /// <see cref="AudioFileInfo.FullPath"/> is set to <paramref name="fileName"/> verbatim here —
+    /// there is no real filesystem path when called from a byte source with no disk file (e.g. the
+    /// browser). The <see cref="Read(string)"/> overload above resolves the true full path itself.
+    /// </summary>
+    public static (AudioFileInfo FileInfo, FormatInfo FormatInfo, EncodingAnalysis EncodingAnalysis) Read(byte[] data, string fileName)
+    {
         var parseResult = Mp3FrameParser.Parse(data);
         var frames = parseResult.Frames;
 
         if (frames.Count == 0)
         {
-            throw new InvalidDataException($"No valid MPEG audio frames found in '{path}'.");
+            throw new InvalidDataException($"No valid MPEG audio frames found in '{fileName}'.");
         }
 
         var first = frames[0];
@@ -35,9 +45,9 @@ public static class Mp3MetadataReader
 
         var fileInfo = new AudioFileInfo
         {
-            FullPath = Path.GetFullPath(path),
-            FileName = Path.GetFileName(path),
-            Extension = Path.GetExtension(path),
+            FullPath = fileName,
+            FileName = Path.GetFileName(fileName),
+            Extension = Path.GetExtension(fileName),
             SizeInBytes = data.LongLength,
             Duration = duration,
         };

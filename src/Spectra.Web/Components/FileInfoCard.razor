@@ -1,0 +1,47 @@
+<section class="report-section">
+    <h2>File Information</h2>
+    <div class="kv">
+        <div class="k">Filename</div><div class="v">@FileInfo.FileName</div>
+        <div class="k">Duration</div><div class="v">@Format.Duration(FileInfo.Duration)</div>
+        <div class="k">Size</div><div class="v">@Format.Bytes(FileInfo.SizeInBytes)</div>
+        <div class="k">Format</div><div class="v">@FormatLabel()</div>
+        <div class="k">Sample Rate</div><div class="v">@(FormatInfo.SampleRateHz) Hz</div>
+        <div class="k">Channels</div><div class="v">@(FormatInfo.Channels) (@FormatInfo.ChannelMode)</div>
+        @if (FormatInfo.BitsPerSample is { } bitsPerSample)
+        {
+            <div class="k">Bit Depth</div><div class="v">@(bitsPerSample)-bit</div>
+        }
+        @if (FormatInfo.Encoder is not null)
+        {
+            <div class="k">Encoder</div><div class="v">@FormatInfo.Encoder</div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public AudioFileInfo FileInfo { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public FormatInfo FormatInfo { get; set; } = default!;
+
+    private string FormatLabel() => FormatInfo.Format == "MP3"
+        ? $"{FormatInfo.Format} (MPEG {DescribeVersion(FormatInfo.MpegVersion)} Layer {DescribeLayer(FormatInfo.MpegLayer)})"
+        : FormatInfo.Format;
+
+    private static string DescribeVersion(Spectra.Core.Enums.MpegVersion version) => version switch
+    {
+        Spectra.Core.Enums.MpegVersion.Version1 => "1",
+        Spectra.Core.Enums.MpegVersion.Version2 => "2",
+        Spectra.Core.Enums.MpegVersion.Version2_5 => "2.5",
+        _ => "?",
+    };
+
+    private static string DescribeLayer(Spectra.Core.Enums.MpegLayer layer) => layer switch
+    {
+        Spectra.Core.Enums.MpegLayer.LayerI => "I",
+        Spectra.Core.Enums.MpegLayer.LayerII => "II",
+        Spectra.Core.Enums.MpegLayer.LayerIII => "III",
+        _ => "?",
+    };
+}

@@ -9,13 +9,15 @@ namespace Spectra.Audio.Wav;
 /// </summary>
 public sealed class WavAudioDecoder : IAudioDecoder
 {
-    public DecodedAudio Decode(string path)
+    public DecodedAudio Decode(string path) => Decode(File.ReadAllBytes(path), path);
+
+    public static DecodedAudio Decode(byte[] data, string fileName)
     {
-        var wav = WavFileReader.Read(path);
+        var wav = WavFileReader.Read(data, fileName);
         var bytesPerSample = wav.BitsPerSample / 8;
         if (bytesPerSample * 8 != wav.BitsPerSample || bytesPerSample is not (1 or 2 or 3 or 4))
         {
-            throw new InvalidDataException($"'{path}' uses {wav.BitsPerSample}-bit samples, which is not supported (supported: 8, 16, 24, 32-bit PCM or 32/64-bit float).");
+            throw new InvalidDataException($"'{fileName}' uses {wav.BitsPerSample}-bit samples, which is not supported (supported: 8, 16, 24, 32-bit PCM or 32/64-bit float).");
         }
 
         var frameStride = wav.ChannelCount * bytesPerSample;

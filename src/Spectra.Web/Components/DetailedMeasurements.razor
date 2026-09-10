@@ -1,0 +1,61 @@
+<section class="report-section">
+    <details class="details-block">
+        <summary>Detailed Measurements</summary>
+
+        <h3>Waveform</h3>
+        <div class="kv">
+            <div class="k">Peak Amplitude</div><div class="v">@Result.WaveformAnalysis.PeakAmplitude.ToString("F4")</div>
+            <div class="k">RMS Amplitude</div><div class="v">@Result.WaveformAnalysis.RmsAmplitude.ToString("F4")</div>
+            <div class="k">Sample Range</div><div class="v">@Result.WaveformAnalysis.MinSample.ToString("F4") to @Result.WaveformAnalysis.MaxSample.ToString("F4")</div>
+            <div class="k">Leading Silence</div><div class="v">@Format.Duration(Result.WaveformAnalysis.LeadingSilence)</div>
+            <div class="k">Trailing Silence</div><div class="v">@Format.Duration(Result.WaveformAnalysis.TrailingSilence)</div>
+        </div>
+
+        @if (Result.WaveformAnalysis.PerChannel.Count > 0)
+        {
+            <h3>Per-Channel Waveform</h3>
+            <table class="detail-table">
+                <thead>
+                    <tr><th>Channel</th><th>Peak</th><th>RMS</th><th>Min</th><th>Max</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var channel in Result.WaveformAnalysis.PerChannel)
+                    {
+                        <tr>
+                            <td>@channel.ChannelIndex</td>
+                            <td>@channel.Peak.ToString("F4")</td>
+                            <td>@channel.Rms.ToString("F4")</td>
+                            <td>@channel.MinSample.ToString("F4")</td>
+                            <td>@channel.MaxSample.ToString("F4")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @if (Result.LoudnessAnalysis.SamplePeakPerChannelDbfs.Count > 0)
+        {
+            <h3>Per-Channel Peaks</h3>
+            <table class="detail-table">
+                <thead>
+                    <tr><th>Channel</th><th>Sample Peak</th><th>True Peak</th></tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Result.LoudnessAnalysis.SamplePeakPerChannelDbfs.Count; i++)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>@Format.Number(Result.LoudnessAnalysis.SamplePeakPerChannelDbfs[i], "F2") dBFS</td>
+                            <td>@Format.Number(Result.LoudnessAnalysis.TruePeakPerChannelDbfs[i], "F2") dBTP</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </details>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public AudioAnalysisResult Result { get; set; } = default!;
+}

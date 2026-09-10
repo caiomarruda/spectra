@@ -1,0 +1,19 @@
+<section class="report-section">
+    <h2>Encoding</h2>
+    <div class="kv">
+        <div class="k">Declared Bitrate</div><div class="v">@(Encoding.DeclaredBitrateKbps) kbps</div>
+        <div class="k">Measured Average Bitrate</div><div class="v">@Format.Number(Encoding.AverageBitrateKbps) kbps</div>
+        <div class="k">Bitrate Range</div><div class="v">@(Encoding.MinimumBitrateKbps)–@(Encoding.MaximumBitrateKbps) kbps</div>
+        <div class="k">Bitrate Mode</div><div class="v">@Encoding.BitrateMode</div>
+        <div class="k">Frame Count</div><div class="v">@Encoding.FrameCount</div>
+        <div class="k">Xing/LAME</div>
+        <div class="v">
+            @(Encoding.HasXingHeader ? "Xing header present" : "No Xing header")@(Encoding.HasLameTag ? ", LAME tag present" : "")
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public EncodingAnalysis Encoding { get; set; } = default!;
+}

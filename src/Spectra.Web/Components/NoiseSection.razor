@@ -1,0 +1,13 @@
+<section class="report-section">
+    <h2>Noise</h2>
+    <div class="kv">
+        <div class="k">Noise Floor</div><div class="v">@Format.Db(Noise.NoiseFloorDb)</div>
+        <div class="k">DC Offset</div><div class="v">@(Noise.HasSignificantDcOffset ? "significant" : "negligible")</div>
+        <div class="k">Internal Silence</div><div class="v">@(Noise.HasExcessiveInternalSilence ? "excessive gap detected" : "none")</div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public NoiseAnalysis Noise { get; set; } = default!;
+}

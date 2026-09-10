@@ -10,15 +10,21 @@ namespace Spectra.Audio.Flac;
 /// </summary>
 public sealed class FlacAudioDecoder : IAudioDecoder
 {
-    public DecodedAudio Decode(string path)
+    public DecodedAudio Decode(string path) => Decode(File.ReadAllBytes(path), path);
+
+    public static DecodedAudio Decode(byte[] data, string fileName)
     {
-        var file = FlacContainerReader.Read(path);
+        var file = FlacContainerReader.Read(data, fileName);
         var channelCount = file.StreamInfo.ChannelCount;
 
+        // STREAMINFO's total-sample count (0 if the encoder didn't know it up front) lets each
+        // channel list pre-allocate its backing array once instead of growing — and repeatedly
+        // copying — it frame by frame across a from-scratch decode of the whole file.
+        var estimatedSampleCount = file.StreamInfo.TotalSamples > 0 ? (int)Math.Min(file.StreamInfo.TotalSamples, int.MaxValue) : 0;
         var channels = new List<float>[channelCount];
         for (var c = 0; c < channelCount; c++)
         {
-            channels[c] = [];
+            channels[c] = new List<float>(estimatedSampleCount);
         }
 
         var scale = 1f / (1L << (file.StreamInfo.BitsPerSample - 1));

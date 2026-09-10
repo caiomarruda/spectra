@@ -1,0 +1,18 @@
+<div class="processing">
+    <div class="spinner"></div>
+    <div class="stage">@StageLabel()</div>
+    <p class="muted">This can take a moment for longer files — everything runs in your browser.</p>
+</div>
+
+@code {
+    [Parameter]
+    public WebAnalysisState State { get; set; }
+
+    private string StageLabel() => State switch
+    {
+        WebAnalysisState.Loading => "Loading file…",
+        WebAnalysisState.Decoding => "Decoding audio…",
+        WebAnalysisState.Analyzing => "Analyzing…",
+        _ => "Processing…",
+    };
+}

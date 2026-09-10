@@ -1,0 +1,127 @@
+@page "/"
+@inject IAudioAnalysisService AnalysisService
+
+<PageTitle>Spectra — Audio Quality Analyzer</PageTitle>
+
+@if (_state == WebAnalysisState.Idle)
+{
+    <p class="intro">
+        Analyze the technical quality and spectral characteristics of an audio file directly in
+        your browser.
+    </p>
+    <FileDropZone OnFileReady="AnalyzeFileAsync" />
+}
+else if (_state is WebAnalysisState.Loading or WebAnalysisState.Decoding or WebAnalysisState.Analyzing)
+{
+    <ProcessingState State="_state" />
+}
+else if (_state == WebAnalysisState.Error)
+{
+    <div class="error-card">
+        <h2>Analysis failed</h2>
+        <p>@_errorMessage</p>
+    </div>
+    <div class="actions">
+        <button class="btn-reset" @onclick="Reset">Analyze another file</button>
+    </div>
+}
+else if (_state == WebAnalysisState.Completed && _result is { } result)
+{
+    @if (result.Warnings.Count > 0)
+    {
+        <div class="warning-banner">
+            @foreach (var warning in result.Warnings)
+            {
+                <p><strong>Warning:</strong> @warning</p>
+            }
+        </div>
+    }
+
+    <section class="report-section">
+        <p class="verdict">@result.OverallAssessment.Verdict</p>
+        <div class="scores">
+            <ScoreCard Label="Overall" Score="result.OverallAssessment.OverallQualityScore" Primary="true" />
+            <ScoreCard Label="Encoding" Score="result.OverallAssessment.EncodingQualityScore" />
+            <ScoreCard Label="Spectral" Score="result.OverallAssessment.SpectralQualityScore" />
+            <ScoreCard Label="Technical" Score="result.OverallAssessment.TechnicalQualityScore" />
+            <ScoreCard Label="Mastering" Score="result.OverallAssessment.MasteringQualityScore" />
+        </div>
+
+        @if (result.OverallAssessment.Findings.Count > 0)
+        {
+            <h3>Findings</h3>
+            @foreach (var finding in result.OverallAssessment.Findings)
+            {
+                <div class="finding @finding.Severity.ToString().ToLowerInvariant()">
+                    <h4>[@finding.Severity] @finding.Title <span class="muted">(@finding.Code)</span></h4>
+                    <p>@finding.Description</p>
+                </div>
+            }
+        }
+    </section>
+
+    <FileInfoCard FileInfo="result.FileInfo" FormatInfo="result.FormatInfo" />
+    <EncodingSection Encoding="result.EncodingAnalysis" />
+    <SpectralSection Spectral="result.SpectralAnalysis" />
+    <LoudnessSection Loudness="result.LoudnessAnalysis" />
+    <DynamicsSection Dynamics="result.DynamicRangeAnalysis" />
+    <ClippingSection Clipping="result.ClippingAnalysis" />
+    <StereoSection Stereo="result.StereoAnalysis" />
+    <NoiseSection Noise="result.NoiseAnalysis" />
+    <TranscodingSection Transcoding="result.TranscodingAnalysis" />
+    <DetailedMeasurements Result="result" />
+
+    <div class="actions">
+        <button class="btn-reset" @onclick="Reset">Analyze another file</button>
+    </div>
+}
+
+@code {
+    private WebAnalysisState _state = WebAnalysisState.Idle;
+    private AudioAnalysisResult? _result;
+    private string? _errorMessage;
+
+    private async Task AnalyzeFileAsync((byte[] Data, string FileName) file)
+    {
+        _state = WebAnalysisState.Decoding;
+        StateHasChanged();
+        // Task.Yield() only re-queues the continuation within the WASM runtime's own
+        // synchronization context — it does not hand control back to the browser's event loop,
+        // so the "Decoding"/"Analyzing" UI never actually paints before the long synchronous
+        // AnalyzeAsync call below blocks the single UI thread. Task.Delay schedules via a real
+        // JS setTimeout (a macrotask), which forces the browser to render this frame first.
+        await Task.Delay(30);
+
+        _state = WebAnalysisState.Analyzing;
+        StateHasChanged();
+        await Task.Delay(30);
+
+        try
+        {
+            _result = await AnalysisService.AnalyzeAsync(file.Data, file.FileName);
+            _state = WebAnalysisState.Completed;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = FriendlyMessage(ex);
+            _state = WebAnalysisState.Error;
+        }
+    }
+
+    private void Reset()
+    {
+        _state = WebAnalysisState.Idle;
+        _result = null;
+        _errorMessage = null;
+    }
+
+    // InvalidDataException/NotSupportedException messages from the decoders/readers are already
+    // user-facing (e.g. "'track.mp3' is not a valid RIFF/WAVE file.") with no internal paths —
+    // safe to show verbatim. Anything else is an unexpected bug: show a generic message, never
+    // the raw exception/stack trace.
+    private static string FriendlyMessage(Exception ex) => ex switch
+    {
+        InvalidDataException or NotSupportedException => ex.Message,
+        _ => "Something went wrong while analyzing this file. It may be corrupted or in an unexpected format.",
+    };
+}

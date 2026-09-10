@@ -25,15 +25,15 @@ internal readonly record struct WavFileData
 /// </summary>
 internal static class WavFileReader
 {
-    public static WavFileData Read(string path)
-    {
-        var data = File.ReadAllBytes(path);
+    public static WavFileData Read(string path) => Read(File.ReadAllBytes(path), path);
 
+    public static WavFileData Read(byte[] data, string fileName)
+    {
         if (data.Length < 12
             || data[0] != 'R' || data[1] != 'I' || data[2] != 'F' || data[3] != 'F'
             || data[8] != 'W' || data[9] != 'A' || data[10] != 'V' || data[11] != 'E')
         {
-            throw new InvalidDataException($"'{path}' is not a valid RIFF/WAVE file.");
+            throw new InvalidDataException($"'{fileName}' is not a valid RIFF/WAVE file.");
         }
 
         int? sampleRateHz = null;
@@ -60,7 +60,7 @@ internal static class WavFileReader
             {
                 if (effectiveSize < 16)
                 {
-                    throw new InvalidDataException($"'{path}' has a truncated WAV 'fmt ' chunk.");
+                    throw new InvalidDataException($"'{fileName}' has a truncated WAV 'fmt ' chunk.");
                 }
 
                 var audioFormat = BitConverter.ToUInt16(data, chunkDataOffset);
@@ -72,7 +72,7 @@ internal static class WavFileReader
                 {
                     if (effectiveSize < 40)
                     {
-                        throw new InvalidDataException($"'{path}' has a truncated WAVE_FORMAT_EXTENSIBLE 'fmt ' chunk.");
+                        throw new InvalidDataException($"'{fileName}' has a truncated WAVE_FORMAT_EXTENSIBLE 'fmt ' chunk.");
                     }
                     audioFormat = BitConverter.ToUInt16(data, chunkDataOffset + 24);
                 }
@@ -81,7 +81,7 @@ internal static class WavFileReader
                 {
                     1 => WavSampleFormat.Pcm,
                     3 => WavSampleFormat.IeeeFloat,
-                    _ => throw new InvalidDataException($"'{path}' uses WAV audio format code {audioFormat}, which is not a supported PCM/IEEE-float encoding (compressed WAV variants such as A-law, mu-law, or ADPCM are not supported)."),
+                    _ => throw new InvalidDataException($"'{fileName}' uses WAV audio format code {audioFormat}, which is not a supported PCM/IEEE-float encoding (compressed WAV variants such as A-law, mu-law, or ADPCM are not supported)."),
                 };
             }
             else if (chunkId == "data")
@@ -100,16 +100,16 @@ internal static class WavFileReader
 
         if (sampleRateHz is null || channelCount is null || bitsPerSample is null || sampleFormat is null)
         {
-            throw new InvalidDataException($"'{path}' has no 'fmt ' chunk.");
+            throw new InvalidDataException($"'{fileName}' has no 'fmt ' chunk.");
         }
         if (dataOffset is null || dataLength is null)
         {
-            throw new InvalidDataException($"'{path}' has no 'data' chunk.");
+            throw new InvalidDataException($"'{fileName}' has no 'data' chunk.");
         }
 
         if (channelCount.Value is < 1 or > 2)
         {
-            throw new InvalidDataException($"'{path}' has {channelCount.Value} channels; only mono and stereo files are supported.");
+            throw new InvalidDataException($"'{fileName}' has {channelCount.Value} channels; only mono and stereo files are supported.");
         }
 
         return new WavFileData

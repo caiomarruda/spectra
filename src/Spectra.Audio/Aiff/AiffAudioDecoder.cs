@@ -9,13 +9,15 @@ namespace Spectra.Audio.Aiff;
 /// </summary>
 public sealed class AiffAudioDecoder : IAudioDecoder
 {
-    public DecodedAudio Decode(string path)
+    public DecodedAudio Decode(string path) => Decode(File.ReadAllBytes(path), path);
+
+    public static DecodedAudio Decode(byte[] data, string fileName)
     {
-        var aiff = AiffFileReader.Read(path);
+        var aiff = AiffFileReader.Read(data, fileName);
         var bytesPerSample = aiff.BitsPerSample / 8;
         if (bytesPerSample * 8 != aiff.BitsPerSample || bytesPerSample is not (1 or 2 or 3 or 4))
         {
-            throw new InvalidDataException($"'{path}' uses {aiff.BitsPerSample}-bit samples, which is not supported (supported: 8, 16, 24, 32-bit PCM).");
+            throw new InvalidDataException($"'{fileName}' uses {aiff.BitsPerSample}-bit samples, which is not supported (supported: 8, 16, 24, 32-bit PCM).");
         }
 
         var frameStride = aiff.ChannelCount * bytesPerSample;

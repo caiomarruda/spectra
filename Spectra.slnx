@@ -5,6 +5,7 @@
     <Project Path="src/Spectra.Cli/Spectra.Cli.csproj" />
     <Project Path="src/Spectra.Core/Spectra.Core.csproj" />
     <Project Path="src/Spectra.Reporting/Spectra.Reporting.csproj" />
+    <Project Path="src/Spectra.Web/Spectra.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Spectra.Tests/Spectra.Tests.csproj" />

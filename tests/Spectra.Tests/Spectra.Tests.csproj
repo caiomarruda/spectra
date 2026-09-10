@@ -28,4 +28,12 @@
     <ProjectReference Include="..\..\src\Spectra.Cli\Spectra.Cli.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Compiled directly rather than via a ProjectReference to Spectra.Web: that project uses
+         Microsoft.NET.Sdk.BlazorWebAssembly (Razor compilation, static web asset pipeline), which
+         a plain xunit project has no reason to pull in for one service class with zero Blazor-API
+         dependency. -->
+    <Compile Include="..\..\src\Spectra.Web\Services\AudioAnalysisService.cs" Link="Web\AudioAnalysisService.cs" />
+  </ItemGroup>
+
 </Project>

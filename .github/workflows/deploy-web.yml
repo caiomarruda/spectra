@@ -1,0 +1,73 @@
+name: Deploy Spectra.Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Spectra.slnx
+
+      - name: Build
+        run: dotnet build Spectra.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Spectra.slnx -c Release --no-build
+
+      - name: Publish Spectra.Web
+        run: dotnet publish src/Spectra.Web/Spectra.Web.csproj -c Release --no-restore -o publish-output
+
+      # GitHub Pages serves this project under /spectra/, not the domain root, so the base href
+      # baked into the published index.html (correctly "/" for local dev) must be rewritten here —
+      # only in the published artifact, never in source.
+      - name: Rewrite base href for the /spectra/ project site
+        working-directory: publish-output/wwwroot
+        run: sed -i 's|<base href="/" />|<base href="/spectra/" />|' index.html
+
+      # Deep links / refreshes on a non-root path have nothing to fall back to on GitHub Pages
+      # (no server-side routing) — serving the same app shell for any unmatched path is the
+      # standard SPA-on-GitHub-Pages fix.
+      - name: Add SPA fallback (404.html)
+        working-directory: publish-output/wwwroot
+        run: cp index.html 404.html
+
+      # Without this, GitHub Pages' Jekyll processing drops the _framework/ directory (leading
+      # underscore), and the app 404s trying to load its own WASM/DLL assets.
+      - name: Add .nojekyll
+        working-directory: publish-output/wwwroot
+        run: touch .nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: publish-output/wwwroot
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,20 @@
+<section class="report-section">
+    <h2>Clipping</h2>
+    <div class="kv">
+        <div class="k">Clipped Samples</div><div class="v">@Clipping.TotalClippedSamples (@Format.Number(Clipping.ClippedPercentage, "F4")%)</div>
+        <div class="k">Clip Events</div><div class="v">@Clipping.ClipEventCount</div>
+        <div class="k">Longest Clip</div>
+        <div class="v">
+            @Format.Number(Clipping.LongestClipDuration.TotalMilliseconds) ms
+            @if (Clipping.IsSevere)
+            {
+                <span class="badge poor">SEVERE</span>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public ClippingAnalysis Clipping { get; set; } = default!;
+}

@@ -1,0 +1,15 @@
+<section class="report-section">
+    <h2>Dynamics</h2>
+    <div class="kv">
+        <div class="k">Crest Factor</div><div class="v">@Format.Db(Dynamics.CrestFactorDb)</div>
+        <div class="k">RMS Window Range</div><div class="v">@Format.Number(Dynamics.RmsWindowMinDb) to @Format.Number(Dynamics.RmsWindowMaxDb) dB</div>
+        <div class="k">RMS Window Median</div><div class="v">@Format.Db(Dynamics.RmsWindowMedianDb)</div>
+        <div class="k">RMS Window Std Dev</div><div class="v">@Format.Db(Dynamics.RmsWindowStdDevDb)</div>
+        <div class="k">Near Full Scale</div><div class="v">@Format.Number(Dynamics.PercentSamplesNearFullScale, "F3")% of samples</div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public DynamicRangeAnalysis Dynamics { get; set; } = default!;
+}

@@ -23,13 +23,13 @@ internal readonly record struct FlacFileData
 /// </summary>
 internal static class FlacContainerReader
 {
-    public static FlacFileData Read(string path)
-    {
-        var data = File.ReadAllBytes(path);
+    public static FlacFileData Read(string path) => Read(File.ReadAllBytes(path), path);
 
+    public static FlacFileData Read(byte[] data, string fileName)
+    {
         if (data.Length < 4 || data[0] != 'f' || data[1] != 'L' || data[2] != 'a' || data[3] != 'C')
         {
-            throw new InvalidDataException($"'{path}' is not a valid FLAC file (missing 'fLaC' marker).");
+            throw new InvalidDataException($"'{fileName}' is not a valid FLAC file (missing 'fLaC' marker).");
         }
 
         FlacStreamInfo? streamInfo = null;
@@ -45,12 +45,12 @@ internal static class FlacContainerReader
 
             if (blockDataOffset + length > data.Length)
             {
-                throw new InvalidDataException($"'{path}' has a truncated metadata block.");
+                throw new InvalidDataException($"'{fileName}' has a truncated metadata block.");
             }
 
             if (blockType == 0) // STREAMINFO
             {
-                streamInfo = ParseStreamInfo(data, blockDataOffset, length, path);
+                streamInfo = ParseStreamInfo(data, blockDataOffset, length, fileName);
             }
             // All other block types (VORBIS_COMMENT, SEEKTABLE, PADDING, APPLICATION, CUESHEET,
             // PICTURE, and any reserved/unknown type) are skipped by length, not interpreted.
@@ -64,11 +64,11 @@ internal static class FlacContainerReader
 
         if (streamInfo is null)
         {
-            throw new InvalidDataException($"'{path}' has no STREAMINFO metadata block.");
+            throw new InvalidDataException($"'{fileName}' has no STREAMINFO metadata block.");
         }
         if (streamInfo.Value.ChannelCount is < 1 or > 2)
         {
-            throw new InvalidDataException($"'{path}' has {streamInfo.Value.ChannelCount} channels; only mono and stereo files are supported.");
+            throw new InvalidDataException($"'{fileName}' has {streamInfo.Value.ChannelCount} channels; only mono and stereo files are supported.");
         }
 
         return new FlacFileData { FileBytes = data, AudioStartOffset = offset, StreamInfo = streamInfo.Value };

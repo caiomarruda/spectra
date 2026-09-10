@@ -1,0 +1,16 @@
+<section class="report-section">
+    <h2>Loudness</h2>
+    <div class="kv">
+        <div class="k">Integrated Loudness</div><div class="v">@Format.Lufs(Loudness.IntegratedLufs)</div>
+        <div class="k">Momentary Max</div><div class="v">@Format.Lufs(Loudness.MomentaryMaxLufs)</div>
+        <div class="k">Short-Term Max</div><div class="v">@Format.Lufs(Loudness.ShortTermMaxLufs)</div>
+        <div class="k">Loudness Range</div><div class="v">@Format.Number(Loudness.LoudnessRangeLu) LU</div>
+        <div class="k">Sample Peak</div><div class="v">@Format.Number(Loudness.SamplePeakDbfs, "F2") dBFS</div>
+        <div class="k">True Peak</div><div class="v">@Format.Number(Loudness.TruePeakDbfs, "F2") dBTP</div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public LoudnessAnalysis Loudness { get; set; } = default!;
+}

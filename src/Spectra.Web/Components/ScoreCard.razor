@@ -1,0 +1,15 @@
+<div class="score-card @Format.ScoreClass(Score) @(Primary ? "primary" : "")">
+    <div class="score-value">@Score.ToString("F0")</div>
+    <div class="score-label">@Label</div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = default!;
+
+    [Parameter]
+    public double Score { get; set; }
+
+    [Parameter]
+    public bool Primary { get; set; }
+}

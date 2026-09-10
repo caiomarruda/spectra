@@ -19,7 +19,18 @@ public static class FlacMetadataReader
 {
     public static (AudioFileInfo FileInfo, FormatInfo FormatInfo, EncodingAnalysis EncodingAnalysis) Read(string path)
     {
-        var file = FlacContainerReader.Read(path);
+        var (fileInfo, formatInfo, encodingAnalysis) = Read(File.ReadAllBytes(path), path);
+        return (fileInfo with { FullPath = Path.GetFullPath(path) }, formatInfo, encodingAnalysis);
+    }
+
+    /// <summary>
+    /// <see cref="AudioFileInfo.FullPath"/> is set to <paramref name="fileName"/> verbatim here —
+    /// there is no real filesystem path when called from a byte source with no disk file (e.g. the
+    /// browser). The <see cref="Read(string)"/> overload above resolves the true full path itself.
+    /// </summary>
+    public static (AudioFileInfo FileInfo, FormatInfo FormatInfo, EncodingAnalysis EncodingAnalysis) Read(byte[] data, string fileName)
+    {
+        var file = FlacContainerReader.Read(data, fileName);
         var (frameCount, totalSamplesWalked) = FlacFrameWalker.CountFrames(file);
 
         var totalSamples = file.StreamInfo.TotalSamples > 0 ? file.StreamInfo.TotalSamples : totalSamplesWalked;
@@ -34,9 +45,9 @@ public static class FlacMetadataReader
 
         var fileInfo = new AudioFileInfo
         {
-            FullPath = Path.GetFullPath(path),
-            FileName = Path.GetFileName(path),
-            Extension = Path.GetExtension(path),
+            FullPath = fileName,
+            FileName = Path.GetFileName(fileName),
+            Extension = Path.GetExtension(fileName),
             SizeInBytes = file.FileBytes.LongLength,
             Duration = duration,
         };

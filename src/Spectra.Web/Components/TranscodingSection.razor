@@ -1,0 +1,43 @@
+<section class="report-section">
+    <h2>Transcoding Evidence</h2>
+    <p class="muted">
+        Spectra never asserts a file's history with certainty — this is a probability derived from
+        spectral evidence, not a definitive statement.
+    </p>
+    <div class="kv">
+        <div class="k">Probability</div><div class="v">@Format.Number(Transcoding.Probability, "F0")% (@SpaceOut(Transcoding.Label.ToString()))</div>
+        <div class="k">Confidence</div><div class="v">@Transcoding.Confidence</div>
+    </div>
+
+    @if (Transcoding.Findings.Count > 0)
+    {
+        <h3>Evidence</h3>
+        @foreach (var finding in Transcoding.Findings)
+        {
+            <div class="finding @finding.Severity.ToString().ToLowerInvariant()">
+                <h4>[@finding.Severity] @finding.Title <span class="muted">(@finding.Code)</span></h4>
+                <p>@finding.Description</p>
+                <p class="muted">Confidence: @finding.Confidence</p>
+                @if (finding.Evidence.Count > 0)
+                {
+                    <ul>
+                        @foreach (var evidence in finding.Evidence)
+                        {
+                            <li>@evidence</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public TranscodingAnalysis Transcoding { get; set; } = default!;
+
+    // TranscodingProbabilityLabel enum values are PascalCase with no separators
+    // (e.g. "VeryUnlikely") — split on capitals for a readable label.
+    private static string SpaceOut(string value) =>
+        System.Text.RegularExpressions.Regex.Replace(value, "(?<!^)([A-Z])", " $1");
+}

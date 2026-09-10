@@ -20,23 +20,23 @@ internal readonly record struct AiffFileData
 /// </summary>
 internal static class AiffFileReader
 {
-    public static AiffFileData Read(string path)
-    {
-        var data = File.ReadAllBytes(path);
+    public static AiffFileData Read(string path) => Read(File.ReadAllBytes(path), path);
 
+    public static AiffFileData Read(byte[] data, string fileName)
+    {
         if (data.Length < 12 || data[0] != 'F' || data[1] != 'O' || data[2] != 'R' || data[3] != 'M')
         {
-            throw new InvalidDataException($"'{path}' is not a valid FORM/AIFF file.");
+            throw new InvalidDataException($"'{fileName}' is not a valid FORM/AIFF file.");
         }
 
         var formType = System.Text.Encoding.ASCII.GetString(data, 8, 4);
         if (formType == "AIFC")
         {
-            throw new InvalidDataException($"'{path}' is AIFC (compressed AIFF), which is not supported; only uncompressed AIFF is supported.");
+            throw new InvalidDataException($"'{fileName}' is AIFC (compressed AIFF), which is not supported; only uncompressed AIFF is supported.");
         }
         if (formType != "AIFF")
         {
-            throw new InvalidDataException($"'{path}' has FORM type '{formType}', not AIFF.");
+            throw new InvalidDataException($"'{fileName}' has FORM type '{formType}', not AIFF.");
         }
 
         int? sampleRateHz = null;
@@ -60,7 +60,7 @@ internal static class AiffFileReader
             {
                 if (effectiveSize < 18)
                 {
-                    throw new InvalidDataException($"'{path}' has a truncated AIFF 'COMM' chunk.");
+                    throw new InvalidDataException($"'{fileName}' has a truncated AIFF 'COMM' chunk.");
                 }
 
                 channelCount = BinaryPrimitives.ReadInt16BigEndian(data.AsSpan(chunkDataOffset, 2));
@@ -72,7 +72,7 @@ internal static class AiffFileReader
             {
                 if (effectiveSize < 8)
                 {
-                    throw new InvalidDataException($"'{path}' has a truncated AIFF 'SSND' chunk.");
+                    throw new InvalidDataException($"'{fileName}' has a truncated AIFF 'SSND' chunk.");
                 }
 
                 var soundDataOffset = BinaryPrimitives.ReadUInt32BigEndian(data.AsSpan(chunkDataOffset, 4));
@@ -90,15 +90,15 @@ internal static class AiffFileReader
 
         if (sampleRateHz is null || channelCount is null || bitsPerSample is null || sampleFrameCount is null)
         {
-            throw new InvalidDataException($"'{path}' has no 'COMM' chunk.");
+            throw new InvalidDataException($"'{fileName}' has no 'COMM' chunk.");
         }
         if (dataOffset is null || dataLength is null)
         {
-            throw new InvalidDataException($"'{path}' has no 'SSND' chunk.");
+            throw new InvalidDataException($"'{fileName}' has no 'SSND' chunk.");
         }
         if (channelCount.Value is < 1 or > 2)
         {
-            throw new InvalidDataException($"'{path}' has {channelCount.Value} channels; only mono and stereo files are supported.");
+            throw new InvalidDataException($"'{fileName}' has {channelCount.Value} channels; only mono and stereo files are supported.");
         }
 
         return new AiffFileData

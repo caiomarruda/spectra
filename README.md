@@ -132,11 +132,23 @@ Excel export: FAILED
 Reason: File is currently open by another process.
 ```
 
+## Web Analyzer
+
+Analyze a single audio file directly in your browser — no install, no upload.
+
+[Open Spectra Web Analyzer](https://caiomarruda.github.io/spectra/)
+
+Processing happens locally in your browser, on the same decoders and analyzers the CLI uses. Your
+audio file is never uploaded anywhere — there is no server or API involved. It's an experimental
+first version of the tool, limited to one file at a time and without the CLI's export formats or
+time-series charts; see [`src/Spectra.Web`](src/Spectra.Web) for the Blazor WebAssembly project.
+
 ## Architecture
 
 ```
 Spectra
 ├── Cli            — argument parsing, format dispatch, orchestration
+├── Web             — Blazor WebAssembly browser UI (static, client-side only)
 ├── Core            — shared models (AudioAnalysisResult and friends), IAudioDecoder abstraction
 ├── Audio
 │   ├── Mp3         — frame parser, metadata reader, NLayer-backed decoder
@@ -152,6 +164,10 @@ Spectra
 │   ├── Console, Html, Excel
 └── Tests
 ```
+
+Every reader/decoder in `Audio` exposes both a `(string path)` overload (used by the CLI) and a
+`(byte[] data, string fileName)` overload (used by `Web`, which has no filesystem to read from in
+the browser) — same parsing/decoding logic either way, just a different byte source.
 
 Every signal analyzer (spectral, loudness, dynamics, clipping, stereo, noise) operates on decoded PCM (`DecodedAudio`) and has no idea which container the audio came from — only the metadata readers and decoders are format-specific. Adding a new input format means adding a new `IAudioDecoder` + metadata reader; nothing downstream changes.
 

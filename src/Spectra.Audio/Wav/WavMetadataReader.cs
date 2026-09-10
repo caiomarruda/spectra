@@ -12,7 +12,18 @@ public static class WavMetadataReader
 {
     public static (AudioFileInfo FileInfo, FormatInfo FormatInfo, EncodingAnalysis EncodingAnalysis) Read(string path)
     {
-        var wav = WavFileReader.Read(path);
+        var (fileInfo, formatInfo, encodingAnalysis) = Read(File.ReadAllBytes(path), path);
+        return (fileInfo with { FullPath = Path.GetFullPath(path) }, formatInfo, encodingAnalysis);
+    }
+
+    /// <summary>
+    /// <see cref="AudioFileInfo.FullPath"/> is set to <paramref name="fileName"/> verbatim here —
+    /// there is no real filesystem path when called from a byte source with no disk file (e.g. the
+    /// browser). The <see cref="Read(string)"/> overload above resolves the true full path itself.
+    /// </summary>
+    public static (AudioFileInfo FileInfo, FormatInfo FormatInfo, EncodingAnalysis EncodingAnalysis) Read(byte[] data, string fileName)
+    {
+        var wav = WavFileReader.Read(data, fileName);
         var frameCount = WavFileReader.ComputeFrameCount(wav);
         var duration = wav.SampleRateHz > 0 ? TimeSpan.FromSeconds((double)frameCount / wav.SampleRateHz) : TimeSpan.Zero;
 
@@ -20,9 +31,9 @@ public static class WavMetadataReader
 
         var fileInfo = new AudioFileInfo
         {
-            FullPath = Path.GetFullPath(path),
-            FileName = Path.GetFileName(path),
-            Extension = Path.GetExtension(path),
+            FullPath = fileName,
+            FileName = Path.GetFileName(fileName),
+            Extension = Path.GetExtension(fileName),
             SizeInBytes = wav.FileBytes.LongLength,
             Duration = duration,
         };
