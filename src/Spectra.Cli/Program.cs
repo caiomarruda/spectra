@@ -66,7 +66,7 @@ static int RunSingleFileMode(CliOptions options, ILogger logger, JsonSerializerO
 
     try
     {
-        var result = AnalyzeFile(inputPath);
+        var result = AnalyzeFile(inputPath, parallelizeAnalysis: true);
         ConsoleReporter.Report(result, options.Verbose, Console.Out);
 
         if (options.Html)
@@ -189,19 +189,54 @@ static string[] SupportedExtensions() => [".mp3", ".wav", ".flac", ".aiff", ".ai
 static bool IsSupportedExtension(string path) =>
     SupportedExtensions().Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 
-static AudioAnalysisResult AnalyzeFile(string path)
+// parallelizeAnalysis runs the independent analyzers below concurrently instead of one after
+// another. Worth it in single-file mode, where nothing else is using the other cores. Left off
+// by default because RunFolderMode already parallelizes across files (Parallel.For); stacking
+// this on top there would oversubscribe the thread pool with two layers of parallelism instead
+// of speeding anything up.
+static AudioAnalysisResult AnalyzeFile(string path, bool parallelizeAnalysis = false)
 {
     var (fileInfo, formatInfo, encodingAnalysis, decoder) = ReadMetadata(path);
     var decoded = decoder.Decode(path);
 
-    var waveform = WaveformAnalyzer.Analyze(decoded);
-    var spectral = SpectralAnalyzer.Analyze(decoded);
-    var loudness = LoudnessAnalyzer.Analyze(decoded);
-    var dynamicRange = DynamicRangeAnalyzer.Analyze(decoded, waveform);
-    var clipping = ClippingAnalyzer.Analyze(decoded);
-    var stereo = StereoAnalyzer.Analyze(decoded);
-    var transcoding = TranscodingAnalyzer.Analyze(encodingAnalysis, spectral);
-    var noise = NoiseAnalyzer.Analyze(decoded, waveform);
+    WaveformAnalysis waveform = null!;
+    SpectralAnalysis spectral = null!;
+    LoudnessAnalysis loudness = null!;
+    ClippingAnalysis clipping = null!;
+    StereoAnalysis? stereo = null;
+    DynamicRangeAnalysis dynamicRange = null!;
+    NoiseAnalysis noise = null!;
+    TranscodingAnalysis transcoding = null!;
+
+    if (parallelizeAnalysis)
+    {
+        // Tier 1: each needs only the decoded audio, so all five run at once.
+        Parallel.Invoke(
+            () => waveform = WaveformAnalyzer.Analyze(decoded),
+            () => spectral = SpectralAnalyzer.Analyze(decoded),
+            () => loudness = LoudnessAnalyzer.Analyze(decoded),
+            () => clipping = ClippingAnalyzer.Analyze(decoded),
+            () => stereo = StereoAnalyzer.Analyze(decoded));
+
+        // Tier 2: each needs exactly one tier-1 result (waveform or spectral), so these three
+        // can only start once tier 1 has finished, but are independent of one another.
+        Parallel.Invoke(
+            () => dynamicRange = DynamicRangeAnalyzer.Analyze(decoded, waveform),
+            () => noise = NoiseAnalyzer.Analyze(decoded, waveform),
+            () => transcoding = TranscodingAnalyzer.Analyze(encodingAnalysis, spectral));
+    }
+    else
+    {
+        waveform = WaveformAnalyzer.Analyze(decoded);
+        spectral = SpectralAnalyzer.Analyze(decoded);
+        loudness = LoudnessAnalyzer.Analyze(decoded);
+        dynamicRange = DynamicRangeAnalyzer.Analyze(decoded, waveform);
+        clipping = ClippingAnalyzer.Analyze(decoded);
+        stereo = StereoAnalyzer.Analyze(decoded);
+        transcoding = TranscodingAnalyzer.Analyze(encodingAnalysis, spectral);
+        noise = NoiseAnalyzer.Analyze(decoded, waveform);
+    }
+
     var overallAssessment = QualityScorer.Analyze(
         encodingAnalysis, spectral, dynamicRange, clipping, loudness, stereo, noise, transcoding);
 
