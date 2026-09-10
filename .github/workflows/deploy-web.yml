@@ -24,6 +24,12 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # Spectra.Web publishes with RunAOTCompilation=true (compiles to native WebAssembly instead
+      # of running under the IL interpreter — a large speedup for the CPU-heavy analysis pipeline),
+      # which requires this workload. Adds a few minutes to the job.
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
       - name: Restore
         run: dotnet restore Spectra.slnx
 

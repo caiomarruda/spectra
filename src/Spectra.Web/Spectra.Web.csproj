@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <!-- Compiles to native WebAssembly instead of running under the IL interpreter — a large
+         speedup for the CPU-heavy analysis pipeline (FFT, RMS/loudness windows), at the cost of a
+         bigger published app (only affects `dotnet publish`, not `dotnet run`/local dev).
+         Requires the wasm-tools workload: `dotnet workload install wasm-tools`. -->
+    <RunAOTCompilation>true</RunAOTCompilation>
+    <WasmStripILAfterAOT>true</WasmStripILAfterAOT>
   </PropertyGroup>
 
   <ItemGroup>

@@ -143,6 +143,14 @@ audio file is never uploaded anywhere — there is no server or API involved. It
 first version of the tool, limited to one file at a time and without the CLI's export formats or
 time-series charts; see [`src/Spectra.Web`](src/Spectra.Web) for the Blazor WebAssembly project.
 
+Publishing `Spectra.Web` (not just building/testing it) compiles ahead-of-time to native
+WebAssembly for faster analysis, which requires the `wasm-tools` workload:
+
+```bash
+dotnet workload install wasm-tools
+dotnet publish src/Spectra.Web -c Release
+```
+
 ## Architecture
 
 ```
